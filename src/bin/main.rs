@@ -10,8 +10,8 @@ use plasma::parser::Parser;
 fn main() {
     let lex = Lexer::new("let n = 5;");
     let mut parser = Parser::new(lex);
-    for _ in 0..6 {
+    for _ in 0..5 {
+        println!("{:?}", parser.cur_token);
         parser.next_token();
-        println!("{:?}", parser.cur_token);   
     }
 }

@@ -4,15 +4,44 @@ use token::Token;
 #[derive(Debug)]
 pub enum Expression {
     IDENT {token: Token, value: String},
-    FUNC,
-    VAR,
+    BOOL {token: Token, value: bool},
+    INTEGER {token: Token, value: i64},
+    STRING {token: Token, value: String},
+    ARRAY {token: Token, elems: Vec<Box<Expression>>},
+    PREFIX {token: Token, operator: char, right: Option<Box<Expression>>},
+    INFIX {token: Token, operator: char, left: Option<Box<Expression>>, right: Option<Box<Expression>>},
+    IF {token: Token, condition: Box<Expression>, consequence: Statement, alter: Option<Statement>},
+    FUNC {token: Token, params: Vec<Box<Expression>>, body: Statement},
+    CALL {token: Token, func: Box<Expression>, args: Vec<Box<Expression>>},
+}
+
+impl Expression {
+    fn to_string(self) -> String {
+        match self {
+            Expression::IDENT{token, value} => {
+                format!("{:?} {}", token.token, value)
+            },
+            Expression::BOOL{token, value} => {
+                format!("{:?} {}", token.token, value)
+            },
+            Expression::INTEGER{token, value} => {
+                format!("{:?} {}", token.token, value)
+            },
+            Expression::STRING{token, value} => {
+                format!("{:?} {}", token.token, value)
+            },
+            _ => unimplemented!(),
+        }
+    }
 }
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum Statement {
-    LET {token: Token, name: String, value: Option<Expression>},
-    RETURN {token: Token, value: Option<Expression>},
+    LET {token: Token, name: String, value: Option<Box<Expression>>},
+    EXPR_STMT {token: Token, expr: Option<Box<Expression>>},
+    BLOCK_STMT {token: Token, statements: Vec<Box<Statement>>},
+    RETURN {token: Token, value: Option<Box<Expression>>},
 }
 
 impl Statement {
@@ -24,6 +53,7 @@ impl Statement {
             Statement::RETURN{token, value} => {
                 format!("{:?} {:?}", token.token, value)
             } 
+            _ => unimplemented!(),
         }
     }
 }
@@ -63,7 +93,7 @@ impl Node {
     pub fn to_string(self) -> String {
         match self.node_type {
             NodeType::Statement(stmt) => { stmt.to_string() },
-            NodeType::Expression(expr) => { unimplemented!() },
+            NodeType::Expression(expr) => { expr.to_string() },
             _ => { unimplemented!() }
         }
     }

@@ -56,7 +56,8 @@ impl Parser {
             infix_parse_fns: HashMap::new(),
             errors: Vec::new(),
         };
-
+        parser.next_token();
+        parser.next_token();
         //parser.init_prefix();
         //parser.init_infix();
         parser
