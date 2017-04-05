@@ -1,0 +1,7 @@
+[package]
+name = "plasma"
+version = "0.1.0"
+authors = ["jchaput <piinkyz05@gmail.com>"]
+
+[dependencies]
+lazy_static = "*"
