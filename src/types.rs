@@ -71,8 +71,8 @@ impl LetStatement {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ReturnStatement {
-    token: Token,
-    return_value: Option<Box<Expression>>
+    pub token: Token,
+    pub return_value: Option<Box<Expression>>
 }
 
 impl ReturnStatement {
@@ -97,8 +97,8 @@ impl ReturnStatement {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ExpressionStatement {
-    token: Token,
-    expression: Option<Box<Expression>>
+    pub token: Token,
+    pub expression: Option<Box<Expression>>
 }
 
 impl ExpressionStatement {
@@ -117,8 +117,8 @@ impl ExpressionStatement {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct IntegerLiteral {
-    token: Token,
-    value: i64
+    pub token: Token,
+    pub value: i64
 }
 
 impl IntegerLiteral {
@@ -186,8 +186,8 @@ impl InfixExpression {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Boolean {
-    token: Token,
-    value: bool
+    pub token: Token,
+    pub value: bool
 }
 
 impl Boolean {

@@ -39,7 +39,7 @@ pub struct Parser {
     lex: Lexer,
     pub cur_token: Token,
     pub peek_token: Token,
-    errors: Vec<String>
+    pub errors: Vec<String>
 }
 
 impl Parser {
@@ -56,20 +56,30 @@ impl Parser {
         parser
     }
 
-    fn prefix_parse_fns(&mut self, tok: Token) -> Result<Expression, String> {
+    fn prefix_parse_fns(&mut self, tok: Token) -> Option<Expression> {
         match tok.token {
-            TokenType::IDENT => Ok(self.parse_identifier().unwrap()),
-            TokenType::BANG => Ok(self.parse_prefix_expression().unwrap()),
-            TokenType::MINUS => Ok(self.parse_prefix_expression().unwrap()),
-            //TokenType::INT => Ok(self.parse_integer().unwrap()),
-            _ => unimplemented!(),
+            TokenType::IDENT => self.parse_identifier(),
+            TokenType::BANG => self.parse_prefix_expression(),
+            TokenType::MINUS => self.parse_prefix_expression(),
+            TokenType::INT => self.parse_integer(),
+            TokenType::TRUE => self.parse_boolean(),
+            TokenType::FALSE => self.parse_boolean(),
+            _ => None,
         }
     }
 
     fn infix_parse_fns(&mut self, tok: Token, exp: Expression) -> Option<Expression> {
         match tok.token {
-            TokenType::LPAREN => unimplemented!(), 
-            _ => self.parse_infix_expression(exp),
+            TokenType::LPAREN => unimplemented!(),
+            TokenType::PLUS => self.parse_infix_expression(exp),
+            TokenType::MINUS => self.parse_infix_expression(exp),
+            TokenType::SLASH => self.parse_infix_expression(exp),
+            TokenType::ASTERISK => self.parse_infix_expression(exp),
+            TokenType::EQ => self.parse_infix_expression(exp),
+            TokenType::NOT_EQ => self.parse_infix_expression(exp),
+            TokenType::LT => self.parse_infix_expression(exp),
+            TokenType::GT => self.parse_infix_expression(exp),
+            _ => None,
         }
     }
 
@@ -98,14 +108,8 @@ impl Parser {
         };
 
         while !self.current_token_is(TokenType::EOF) {
-            let stmt = self.parse_statement();
-            println!("Statement => {:?}", stmt);
-            match stmt {
-                Some(s) => {
-                    println!("Token => {:?}", s);
-                    program.statements.push(Box::new(s));
-                },
-                None => { break },
+            if let Some(stmt) = self.parse_statement() {
+                program.statements.push(Box::new(stmt));
             }
             self.next_token();
         }
@@ -113,24 +117,42 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Option<Statement> {
-        println!("Current Token => {:?}", self.cur_token.token);
         match self.cur_token.token {
             TokenType::LET => self.parse_let_statement(),
-            TokenType::RETURN => { unimplemented!() },
-            _ => { unimplemented!() }
+            TokenType::RETURN => self.parse_return_statement(),
+            _ => self.parse_expression_statement(),
         }
+    }
+
+    fn parse_expression_statement(&mut self) -> Option<Statement> {
+        let cur_tok = self.cur_token.clone();
+        let exp = self.parse_expression(PrecedenceType::LOWEST);
+
+        if self.peek_token_is(TokenType::SEMICOLON) {
+            self.next_token();
+        }
+
+        let exp_stmt =  Statement::EXPR_STMT(ExpressionStatement{
+            token: cur_tok,
+            expression: Some(Box::new(exp.unwrap())),
+        });
+        Some(exp_stmt)
     }
 
     fn parse_expression(&mut self, preced: PrecedenceType) -> Option<Expression> {
         let cur_tok = self.cur_token.clone();
-        let mut left_exp = self.prefix_parse_fns(cur_tok).unwrap();
-        let mut peek_pred = !self.peek_token_is(TokenType::SEMICOLON);
-        while peek_pred && preced < self.peek_precedence() {
+        let mut left_exp = match self.prefix_parse_fns(cur_tok) {
+            Some(exp) => exp,
+            None => { self.no_prefix_parse_fn_error(); return None },
+        };
+
+        while !self.peek_token_is(TokenType::SEMICOLON) && preced < self.peek_precedence() {
             let peek_tok = self.peek_token.clone();
+            self.next_token();
             if let Some(infix) = self.infix_parse_fns(peek_tok, left_exp.clone()) {
-                self.next_token();
                 left_exp = infix;
-                peek_pred = !self.peek_token_is(TokenType::SEMICOLON);
+            } else {
+                return Some(left_exp)
             }
         }
         Some(left_exp)
@@ -141,54 +163,90 @@ impl Parser {
         let cur_op = cur_tok.literal.clone();
 
         self.next_token();
-        let right = self.parse_expression(PrecedenceType::PREFIX);
-
-        let exp = Expression::PREFIX(PrefixExpression{
-            token: cur_tok,
-            operator: cur_op,
-            right: Box::new(right.unwrap()),
-        });
-        Some(exp)
+        if let Some(right) = self.parse_expression(PrecedenceType::PREFIX) {
+            let exp = Expression::PREFIX(PrefixExpression{
+                token: cur_tok,
+                operator: cur_op,
+                right: Box::new(right),
+            });
+            return Some(exp)
+        }
+        None
     }
 
     fn parse_infix_expression(&mut self, left: Expression) -> Option<Expression> {
-        let preced = self.cur_precedence();
+        let preced = self.cur_precedence().clone();
         let cur_tok = self.cur_token.clone();
         let cur_op = cur_tok.literal.clone();
 
         self.next_token();
-        let right = self.parse_expression(preced);
-        
-        let exp = Expression::INFIX(InfixExpression{
-            token: cur_tok,
-            operator: cur_op,
-            left: Box::new(left),
-            right: Box::new(right.unwrap()),
-        });
-        Some(exp)
+        if let Some(right) = self.parse_expression(preced) {        
+            let exp = Expression::INFIX(InfixExpression{
+                token: cur_tok,
+                operator: cur_op,
+                left: Box::new(left),
+                right: Box::new(right),
+            });
+            return Some(exp)
+        }
+        None
     }
 
     fn parse_let_statement(&mut self) -> Option<Statement> {
-        let tok = self.cur_token.clone();
+        let cur_tok = self.cur_token.clone();
         if !self.expect_peek(TokenType::IDENT) {
             return None
         }
-        let iden = Identifier{token: tok.clone(), value: tok.clone().literal};
+        let iden = Identifier{token: self.cur_token.clone(), value: self.cur_token.clone().literal};
         if !self.expect_peek(TokenType::ASSIGN) {
             return None
         }
         self.next_token();
-        let value = self.parse_expression(PrecedenceType::LOWEST);
-        while !self.current_token_is(TokenType::SEMICOLON) {
-            self.next_token();
+        if let Some(value) = self.parse_expression(PrecedenceType::LOWEST) {
+            while !self.current_token_is(TokenType::SEMICOLON) {
+                self.next_token();
+            }
+            let stmt = Statement::LET(LetStatement{token: cur_tok.clone(), name: iden, value: Some(Box::new(value))});
+            return Some(stmt)
         }
-        let stmt = Statement::LET(LetStatement{token: tok.clone(), name: iden, value: Some(Box::new(value.unwrap()))});
-        println!("Statement => {:?}", stmt);
-        return Some(stmt)
+        None
+    }
+
+    fn parse_integer(&self) -> Option<Expression> {
+        let cur_tok = self.cur_token.clone();
+        if let Ok(integer) = self.cur_token.literal.parse::<i64>() {
+            let exp_int = Expression::INTEGER(IntegerLiteral{
+                token: cur_tok,
+                value: integer,
+            });
+            return Some(exp_int)
+        };
+        None
+    }
+
+    fn parse_boolean(&self) -> Option<Expression> {
+        Some(Expression::BOOL(Boolean{token: self.cur_token.clone(), value: self.current_token_is(TokenType::TRUE)}))
     }
 
     fn parse_identifier(&self) -> Option<Expression> {
         Some(Expression::IDENT(Identifier{token: self.cur_token.clone(), value: self.cur_token.clone().literal}))
+    }
+
+    fn parse_return_statement(&mut self) -> Option<Statement> {
+        let cur_tok = self.cur_token.clone();
+        self.next_token();
+
+        if let Some(ret_val) = self.parse_expression(PrecedenceType::LOWEST) {
+            while !self.current_token_is(TokenType::SEMICOLON) {
+                self.next_token();
+            }
+            let rtn_stmt = Statement::RETURN(ReturnStatement{
+                token: cur_tok,
+                return_value: Some(Box::new(ret_val)),
+            });
+            return Some(rtn_stmt)
+        };
+        None
     }
 
     fn current_token_is(&self, tt: TokenType) -> bool {
@@ -208,8 +266,9 @@ impl Parser {
         false
     }
 
-    fn no_prefix_parse_fn_error(&mut self, tt: TokenType) {
-        let msg = format!("no prefix parse function for {:?} found", tt);
+    #[allow(dead_code)]
+    fn no_prefix_parse_fn_error(&mut self) {
+        let msg = format!("no prefix parse function for {:?} found", self.cur_token.token);
         self.errors.push(msg.to_owned());
     }
 

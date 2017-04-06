@@ -8,8 +8,8 @@ use plasma::lexer::Lexer;
 use plasma::parser::Parser;
 
 fn main() {
-    let lex = Lexer::new("2 + 2");
+    let lex = Lexer::new("let num = 5 + 5;");
     let mut parser = Parser::new(lex);
     let prog = parser.parse_program();
-    println!("{}", prog.to_string());
+    println!("{:?}", prog.to_string());
 }
