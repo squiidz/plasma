@@ -260,9 +260,9 @@ impl IfExpression {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FunctionLiteral {
-    token: Token,
-    parameters: Vec<Box<Identifier>>,
-    body: Box<BlockStatement>
+    pub token: Token,
+    pub parameters: Vec<Expression>,
+    pub body: Statement
 }
 
 impl FunctionLiteral {
@@ -290,9 +290,9 @@ impl FunctionLiteral {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CallExpression {
-    token: Token,
-    function: Box<Expression>,
-    arguments: Vec<Box<Expression>>
+    pub token: Token,
+    pub function: Box<Expression>,
+    pub arguments: Vec<Expression>
 }
 
 impl CallExpression {
@@ -337,8 +337,8 @@ impl StringLiteral {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ArrayLiteral {
-    token: Token,
-    elements: Vec<Box<Expression>>
+    pub token: Token,
+    pub elements: Vec<Expression>
 }
 
 impl ArrayLiteral {

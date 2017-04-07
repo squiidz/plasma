@@ -75,7 +75,7 @@ impl Parser {
 
     fn infix_parse_fns(&mut self, tok: Token, exp: Expression) -> Option<Expression> {
         match tok.token {
-            TokenType::LPAREN => self.parse_call_expression(),
+            TokenType::LPAREN => self.parse_call_expression(exp),
             TokenType::PLUS => self.parse_infix_expression(exp),
             TokenType::MINUS => self.parse_infix_expression(exp),
             TokenType::SLASH => self.parse_infix_expression(exp),
@@ -237,12 +237,41 @@ impl Parser {
         Some(Expression::STRING(StringLiteral{token: self.cur_token.clone(), value: self.cur_token.clone().literal}))
     }
 
-    fn parse_array(&self) -> Option<Expression> {
-        unimplemented!()
+    fn parse_array(&mut self) -> Option<Expression> {
+        let cur_tok = self.cur_token.clone();
+        if let Some(elems) = self.parse_expression_list(TokenType::RBRACKET) {
+            let arr_exp = Expression::ARRAY(ArrayLiteral{
+                token: cur_tok,
+                elements: elems,
+            });
+            return Some(arr_exp)
+        }
+        None
     }
 
-    fn parse_expression_list(&self) -> Vec<Expression> {
-        unimplemented!()
+    fn parse_expression_list(&mut self, tt: TokenType) -> Option<Vec<Expression>> {
+        let mut list: Vec<Expression> = Vec::new();
+        if self.peek_token_is(tt) {
+            self.next_token();
+            return Some(list)
+        }
+
+        self.next_token();
+        if let Some(exp) = self.parse_expression(PrecedenceType::LOWEST) {
+            list.push(exp);
+        };
+
+        while self.peek_token_is(TokenType::COMMA) {
+            self.next_token();
+            self.next_token();
+            if let Some(exp) = self.parse_expression(PrecedenceType::LOWEST) {
+                list.push(exp);
+            };
+        }
+        if !self.expect_peek(tt) {
+            return None
+        }
+        Some(list)
     }
 
     fn parse_identifier(&self) -> Option<Expression> {
@@ -250,11 +279,53 @@ impl Parser {
     }
 
     fn parse_function(&mut self) -> Option<Expression> {
-        unimplemented!()
+        let cur_tok = self.cur_token.clone();
+        if !self.expect_peek(TokenType::LPAREN) {
+            return None
+        }
+
+        let params = self.parse_function_parameters().unwrap();
+        if !self.expect_peek(TokenType::LBRACE) {
+            return None
+        }
+        if let Some(body) = self.parse_block_statement() {
+            let func_exp = Expression::FUNC(FunctionLiteral{
+                token: cur_tok,
+                parameters: params,
+                body: body,
+            });
+            return Some(func_exp)
+        }
+        None
     }
 
-    fn parse_function_parameters(&self) -> Vec<Expression> {
-        unimplemented!()
+    fn parse_function_parameters(&mut self) -> Option<Vec<Expression>> {
+        let mut idents: Vec<Expression> = Vec::new();
+        if self.peek_token_is(TokenType::RPAREN) {
+            self.next_token();
+            return Some(idents)
+        }
+        self.next_token();
+        let ident = Expression::IDENT(Identifier{
+            token: self.cur_token.clone(),
+            value: self.cur_token.clone().literal
+        });
+        idents.push(ident);
+
+        while self.peek_token_is(TokenType::COMMA) {
+            self.next_token();
+            self.next_token();
+            let ident = Expression::IDENT(Identifier{
+                token: self.cur_token.clone(),
+                value: self.cur_token.clone().literal
+            });
+            idents.push(ident);
+        }
+
+        if !self.expect_peek(TokenType::RPAREN) {
+            return None
+        }
+        Some(idents)
     }
 
     fn parse_return_statement(&mut self) -> Option<Statement> {
@@ -274,12 +345,43 @@ impl Parser {
         None
     }
 
-    fn parse_call_expression(&mut self) -> Option<Expression> {
-        unimplemented!()
+    fn parse_call_expression(&mut self, func: Expression) -> Option<Expression> {
+        let cur_tok = self.cur_token.clone();
+        if let Some(arguments) = self.parse_expression_list(TokenType::RPAREN) {
+            let call_exp = Expression::CALL(CallExpression{
+                token: cur_tok,
+                function: Box::new(func),
+                arguments: arguments
+            });
+            return Some(call_exp)
+        }
+        None
     }
 
-    fn parse_call_arguments(&mut self) -> Vec<Expression> {
-        unimplemented!()
+    fn parse_call_arguments(&mut self) -> Option<Vec<Expression>> {
+        let mut args: Vec<Expression> = Vec::new();
+        if self.peek_token_is(TokenType::RPAREN) {
+            self.next_token();
+            return Some(args)
+        }
+        self.next_token();
+
+        if let Some(arg) = self.parse_expression(PrecedenceType::LOWEST) {
+            args.push(arg);
+        }
+
+        while self.peek_token_is(TokenType::COMMA) {
+            self.next_token();
+            self.next_token();
+            if let Some(arg) = self.parse_expression(PrecedenceType::LOWEST) {
+                args.push(arg);
+            }
+        }
+
+        if !self.expect_peek(TokenType::RPAREN) {
+            return None
+        }
+        Some(args)
     }
 
     fn parse_group_expression(&mut self) -> Option<Expression> {
