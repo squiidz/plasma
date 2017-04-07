@@ -44,13 +44,13 @@ impl Identifier {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct LetStatement {
+pub struct VarStatement {
     pub token: Token,
     pub name:  Identifier,
     pub value: Option<Box<Expression>>,
 }
 
-impl LetStatement {
+impl VarStatement {
     pub fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
@@ -203,8 +203,8 @@ impl Boolean {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct BlockStatement {
-    token: Token,
-    statements: Vec<Box<Statement>>
+    pub token: Token,
+    pub statements: Box<Vec<Statement>>,
 }
 
 impl BlockStatement {
@@ -226,10 +226,10 @@ impl BlockStatement {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct IfExpression {
-    token: Token,
-    condition:   Box<Expression>,
-    consequence: Box<BlockStatement>,
-    alternative: Option<Box<BlockStatement>>
+    pub token: Token,
+    pub condition:   Box<Expression>,
+    pub consequence: Box<Statement>,
+    pub alternative: Option<Statement>
 }
 
 impl IfExpression {
@@ -320,8 +320,8 @@ impl CallExpression {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct StringLiteral {
-    token: Token,
-    value: String
+    pub token: Token,
+    pub value: String
 }
 
 impl StringLiteral {

@@ -31,7 +31,7 @@ pub enum TokenType {
     GT,
 
     FUNCTION,
-    LET,
+    VAR,
     TRUE,
     FALSE,
     IF,
@@ -42,8 +42,8 @@ pub enum TokenType {
 lazy_static! {
     static ref KEYWORDS: HashMap<&'static str, TokenType> = {
         let mut hm = HashMap::new();
-        hm.insert("fn", TokenType::FUNCTION);
-        hm.insert("let", TokenType::LET);
+        hm.insert("function", TokenType::FUNCTION);
+        hm.insert("var", TokenType::VAR);
         hm.insert("true", TokenType::TRUE);
         hm.insert("false", TokenType::FALSE);
         hm.insert("if", TokenType::IF);

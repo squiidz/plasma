@@ -52,7 +52,7 @@ impl Expression {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub enum Statement {
-    LET(LetStatement),
+    VAR(VarStatement),
     EXPR_STMT(ExpressionStatement),
     BLOCK_STMT(BlockStatement),
     RETURN(ReturnStatement),
@@ -61,7 +61,7 @@ pub enum Statement {
 impl Statement {
     pub fn to_string(&self) -> String {
         match *self {
-            Statement::LET(ref let_stmt) => let_stmt.to_string(),
+            Statement::VAR(ref let_stmt) => let_stmt.to_string(),
             Statement::EXPR_STMT(ref expr_stmt) => expr_stmt.to_string(),
             Statement::BLOCK_STMT(ref blk_stmt) => blk_stmt.to_string(),
             Statement::RETURN(ref rtn_stmt) => rtn_stmt.to_string(),
@@ -70,7 +70,7 @@ impl Statement {
 
     pub fn token_literal(&self) -> String {
         match *self {
-            Statement::LET(ref let_stmt) => let_stmt.token_literal(),
+            Statement::VAR(ref let_stmt) => let_stmt.token_literal(),
             Statement::EXPR_STMT(ref expr_stmt) => expr_stmt.token_literal(),
             Statement::BLOCK_STMT(ref blk_stmt) => blk_stmt.token_literal(),
             Statement::RETURN(ref rtn_stmt) => rtn_stmt.token_literal(),

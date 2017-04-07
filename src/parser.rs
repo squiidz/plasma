@@ -64,13 +64,18 @@ impl Parser {
             TokenType::INT => self.parse_integer(),
             TokenType::TRUE => self.parse_boolean(),
             TokenType::FALSE => self.parse_boolean(),
+            TokenType::LPAREN => self.parse_group_expression(),
+            TokenType::IF => self.parse_if_expression(),
+            TokenType::FUNCTION => self.parse_function(),
+            TokenType::STRING => self.parse_string(),
+            TokenType::LBRACKET => self.parse_array(),
             _ => None,
         }
     }
 
     fn infix_parse_fns(&mut self, tok: Token, exp: Expression) -> Option<Expression> {
         match tok.token {
-            TokenType::LPAREN => unimplemented!(),
+            TokenType::LPAREN => self.parse_call_expression(),
             TokenType::PLUS => self.parse_infix_expression(exp),
             TokenType::MINUS => self.parse_infix_expression(exp),
             TokenType::SLASH => self.parse_infix_expression(exp),
@@ -118,7 +123,7 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Option<Statement> {
         match self.cur_token.token {
-            TokenType::LET => self.parse_let_statement(),
+            TokenType::VAR => self.parse_let_statement(),
             TokenType::RETURN => self.parse_return_statement(),
             _ => self.parse_expression_statement(),
         }
@@ -206,7 +211,7 @@ impl Parser {
             while !self.current_token_is(TokenType::SEMICOLON) {
                 self.next_token();
             }
-            let stmt = Statement::LET(LetStatement{token: cur_tok.clone(), name: iden, value: Some(Box::new(value))});
+            let stmt = Statement::VAR(VarStatement{token: cur_tok.clone(), name: iden, value: Some(Box::new(value))});
             return Some(stmt)
         }
         None
@@ -228,8 +233,28 @@ impl Parser {
         Some(Expression::BOOL(Boolean{token: self.cur_token.clone(), value: self.current_token_is(TokenType::TRUE)}))
     }
 
+    fn parse_string(&self) -> Option<Expression> {
+        Some(Expression::STRING(StringLiteral{token: self.cur_token.clone(), value: self.cur_token.clone().literal}))
+    }
+
+    fn parse_array(&self) -> Option<Expression> {
+        unimplemented!()
+    }
+
+    fn parse_expression_list(&self) -> Vec<Expression> {
+        unimplemented!()
+    }
+
     fn parse_identifier(&self) -> Option<Expression> {
         Some(Expression::IDENT(Identifier{token: self.cur_token.clone(), value: self.cur_token.clone().literal}))
+    }
+
+    fn parse_function(&mut self) -> Option<Expression> {
+        unimplemented!()
+    }
+
+    fn parse_function_parameters(&self) -> Vec<Expression> {
+        unimplemented!()
     }
 
     fn parse_return_statement(&mut self) -> Option<Statement> {
@@ -247,6 +272,73 @@ impl Parser {
             return Some(rtn_stmt)
         };
         None
+    }
+
+    fn parse_call_expression(&mut self) -> Option<Expression> {
+        unimplemented!()
+    }
+
+    fn parse_call_arguments(&mut self) -> Vec<Expression> {
+        unimplemented!()
+    }
+
+    fn parse_group_expression(&mut self) -> Option<Expression> {
+        self.next_token();
+        let exp = self.parse_expression(PrecedenceType::LOWEST);
+
+        if !self.expect_peek(TokenType::RPAREN) {
+            return None
+        }
+        exp
+    }
+
+    fn parse_if_expression(&mut self) -> Option<Expression> {
+        let cur_tok = self.cur_token.clone();
+        if !self.expect_peek(TokenType::LPAREN) {
+            return None
+        }
+        self.next_token();
+        
+        let exp_cond = self.parse_expression(PrecedenceType::LOWEST);
+        if self.peek_token_is(TokenType::RPAREN) || self.peek_token_is(TokenType::LBRACE) {
+            return None
+        }
+
+        let exp_cons = self.parse_block_statement();
+        let peek_tok = self.peek_token.clone();
+        if peek_tok.token == TokenType::ELSE {
+            self.next_token();
+            if !self.expect_peek(TokenType::LBRACE) {
+                return None
+            }
+            let exp_alt = self.parse_block_statement();
+            let if_exp = Expression::IF(IfExpression{
+                token: cur_tok,
+                condition: Box::new(exp_cond.unwrap()),
+                consequence: Box::new(exp_cons.unwrap()),
+                alternative: exp_alt,
+            });
+            return Some(if_exp)
+        }
+        None
+    }
+
+    fn parse_block_statement(&mut self) -> Option<Statement> {
+        let cur_tok = self.cur_token.clone();
+        let mut statements: Vec<Statement> = Vec::new();
+        self.next_token();
+
+        while !self.current_token_is(TokenType::RBRACE) {
+            if let Some(stmt) = self.parse_statement() {
+                statements.push(stmt);
+            }
+            self.next_token();
+        }
+        let block = Statement::BLOCK_STMT(BlockStatement{
+            token: cur_tok,
+            statements: Box::new(statements),
+        });
+        Some(block)
     }
 
     fn current_token_is(&self, tt: TokenType) -> bool {
