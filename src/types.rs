@@ -7,21 +7,25 @@ pub struct Program {
     pub statements: Vec<Box<Statement>>,
 }
 
-impl Program {
-    pub fn token_literal(&self) -> String {
-        if self.statements.len() > 0 {
+impl Node for Program {
+    fn token_literal(&self) -> String {
+        if !self.statements.is_empty() {
             let head_stmt = self.statements[0].token_literal();
             return head_stmt;
         }
-        return "".to_owned();
+        "".to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
-        for s in self.statements.iter() {
+        for s in &self.statements {
             out.push_str(s.to_string().as_str());
         }
-        return out;
+        out
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Program(self.clone())
     }
 }
 
@@ -32,13 +36,17 @@ pub struct Identifier {
     pub value: String,
 }
 
-impl Identifier {
-    pub fn token_literal(&self) -> String {
+impl Node for Identifier {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         self.value.to_owned()
+    }
+        
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::IDENT(self.clone()))
     }
 }
 
@@ -50,21 +58,24 @@ pub struct VarStatement {
     pub value: Option<Box<Expression>>,
 }
 
-impl VarStatement {
-    pub fn token_literal(&self) -> String {
+impl Node for VarStatement {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
         out.push_str(&(self.token_literal() + " "));
         out.push_str(&self.name.to_string());
         out.push_str(" = ");
-        match self.value.as_ref() {
-            Some(v) => out.push_str(v.to_string().as_str()),
-            None => {}
+        if let Some(v) = self.value.as_ref() {
+            out.push_str(v.to_string().as_str());
         }
         out.push_str(";");
         out.to_owned()
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Statement(Statement::VAR(self.clone()))
     }
 }
 
@@ -75,22 +86,25 @@ pub struct ReturnStatement {
     pub return_value: Option<Box<Expression>>
 }
 
-impl ReturnStatement {
-    pub fn token_literal(&self) -> String {
+impl Node for ReturnStatement {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
 
         out.push_str(&(self.token_literal() + " "));
-        match self.return_value.as_ref() {
-            Some(v) => { out.push_str(v.to_string().as_str()) },
-            None => {},
+        if let Some(v) = self.return_value.as_ref() {
+            out.push_str(v.to_string().as_str());
         }
 
         out.push_str(";");
         out.to_owned()
+    }
+    
+    fn node_type(&self) -> NodeType {
+        NodeType::Statement(Statement::RETURN(self.clone()))
     }
 }
 
@@ -101,16 +115,20 @@ pub struct ExpressionStatement {
     pub expression: Option<Box<Expression>>
 }
 
-impl ExpressionStatement {
-    pub fn token_literal(&self) -> String {
+impl Node for ExpressionStatement {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         match self.expression.as_ref() {
             Some(v) => { v.to_string() },
             None => { "".to_owned() },
         }
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Statement(Statement::EXPR_STMT(self.clone()))
     }
 }
 
@@ -121,13 +139,17 @@ pub struct IntegerLiteral {
     pub value: i64
 }
 
-impl IntegerLiteral {
-    pub fn token_literal(&self) -> String {
+impl Node for IntegerLiteral {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         self.token.literal.to_owned()
+    }
+    
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::INTEGER(self.clone()))
     }
 }
 
@@ -139,12 +161,12 @@ pub struct PrefixExpression {
     pub right: Box<Expression>,
 }
 
-impl PrefixExpression {
-    pub fn token_literal(&self) -> String {
+impl Node for PrefixExpression {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
 
         out.push_str("(");
@@ -153,6 +175,10 @@ impl PrefixExpression {
         out.push_str(")");
 
         out.to_owned()
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::PREFIX(self.clone()))
     }
 }
 
@@ -165,12 +191,12 @@ pub struct InfixExpression {
     pub right: Box<Expression>
 }
 
-impl InfixExpression {
-    pub fn token_literal(&self) -> String {
+impl Node for InfixExpression {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
 
         out.push_str("(");
@@ -181,6 +207,10 @@ impl InfixExpression {
 
         out.to_owned()
     }
+    
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::INFIX(self.clone()))
+    }
 }
 
 #[allow(dead_code)]
@@ -190,13 +220,17 @@ pub struct Boolean {
     pub value: bool
 }
 
-impl Boolean {
-    pub fn token_literal(&self) -> String {
+impl Node for Boolean {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         self.token.literal.to_owned()
+    }
+    
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::BOOL(self.clone()))
     }
 }
 
@@ -204,22 +238,26 @@ impl Boolean {
 #[derive(Debug, Clone)]
 pub struct BlockStatement {
     pub token: Token,
-    pub statements: Box<Vec<Statement>>,
+    pub statements: Vec<Statement>,
 }
 
-impl BlockStatement {
-    pub fn token_literal(&self) -> String {
+impl Node for BlockStatement {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
 
-        for s in self.statements.iter() {
+        for s in &self.statements {
             out.push_str(s.to_string().as_str())
         }
 
         out.to_owned()
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Statement(Statement::BLOCK_STMT(self.clone()))
     }
 }
 
@@ -232,12 +270,12 @@ pub struct IfExpression {
     pub alternative: Option<Statement>
 }
 
-impl IfExpression {
-    pub fn token_literal(&self) -> String {
+impl Node for IfExpression {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
 
         out.push_str("if");
@@ -245,15 +283,16 @@ impl IfExpression {
         out.push_str(" ");
         out.push_str(self.consequence.to_string().as_str());
 
-        match self.alternative.as_ref() {
-            Some(v) => {
-                out.push_str("else ");
-                out.push_str(v.to_string().as_str());
-            },
-            None => {},
+        if let Some(v) = self.alternative.as_ref() {
+            out.push_str("else ");
+            out.push_str(v.to_string().as_str());
         }
 
         out.to_owned()
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::IF(self.clone()))
     }
 }
 
@@ -265,16 +304,16 @@ pub struct FunctionLiteral {
     pub body: Statement
 }
 
-impl FunctionLiteral {
-    pub fn token_literal(&self) -> String {
+impl Node for FunctionLiteral {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
         let mut params = Vec::new();
 
-        for p in self.parameters.iter() {
+        for p in &self.parameters {
             params.push(p.to_string());
         }
         out.push_str(self.token_literal().as_str());
@@ -284,6 +323,10 @@ impl FunctionLiteral {
         out.push_str(self.body.to_string().as_str());
 
         out.to_owned()
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::FUNC(self.clone()))
     }
 }
 
@@ -295,16 +338,16 @@ pub struct CallExpression {
     pub arguments: Vec<Expression>
 }
 
-impl CallExpression {
-    pub fn token_literal(&self) -> String {
+impl Node for CallExpression {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
         let mut params = Vec::new();
 
-        for p in self.arguments.iter() {
+        for p in &self.arguments {
             params.push(p.to_string());
         }
 
@@ -315,6 +358,10 @@ impl CallExpression {
 
         out.to_owned()
     }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::CALL(self.clone()))
+    }
 }
 
 #[allow(dead_code)]
@@ -324,13 +371,17 @@ pub struct StringLiteral {
     pub value: String
 }
 
-impl StringLiteral {
-    pub fn token_literal(&self) -> String {
+impl Node for StringLiteral {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         self.token.literal.to_owned()
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::STRING(self.clone()))
     }
 }
 
@@ -341,16 +392,16 @@ pub struct ArrayLiteral {
     pub elements: Vec<Expression>
 }
 
-impl ArrayLiteral {
-    pub fn token_literal(&self) -> String {
+impl Node for ArrayLiteral {
+    fn token_literal(&self) -> String {
         self.token.literal.to_owned()
     }
 
-    pub fn to_string(&self) -> String {
+    fn to_string(&self) -> String {
         let mut out = String::new();
         let mut elements = Vec::new();
 
-        for el in self.elements.iter() {
+        for el in &self.elements {
             elements.push(el.to_string());
         }
 
@@ -359,5 +410,9 @@ impl ArrayLiteral {
         out.push_str("]");
 
         out.to_owned()
+    }
+
+    fn node_type(&self) -> NodeType {
+        NodeType::Expression(Expression::ARRAY(self.clone()))
     }
 }

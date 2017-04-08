@@ -25,7 +25,8 @@ pub enum Object {
     STRING(Str),
     FUNCTION(Func),
     BUILTIN(BuiltIn),
-    NULL(Null),
+    RETURN_VAL(Return),
+    NULL,
     ERROR(Error),
 }
 
@@ -37,7 +38,8 @@ impl Objecter for Object {
             Object::STRING(ref s) => s.obj_type(),
             Object::FUNCTION(ref f) => f.obj_type(),
             Object::BUILTIN(ref b) => b.obj_type(),
-            Object::NULL(ref n) => n.obj_type(),
+            Object::RETURN_VAL(ref val) => val.obj_type(),
+            Object::NULL => ObjectType::NULL,
             Object::ERROR(ref e) => e.obj_type(),
         }
     }
@@ -49,7 +51,8 @@ impl Objecter for Object {
             Object::STRING(ref s) => s.inspect(),
             Object::FUNCTION(ref f) => f.inspect(),
             Object::BUILTIN(ref b) => b.inspect(),
-            Object::NULL(ref n) => n.inspect(),
+            Object::RETURN_VAL(ref val) => val.inspect(),
+            Object::NULL => "null".to_owned(),
             Object::ERROR(ref e) => e.inspect(),
         }
     }
@@ -70,8 +73,9 @@ impl Objecter for Integer {
 }
 
 #[derive(Debug, Clone)]
-pub struct Boolean {
-    value: bool
+pub enum Boolean {
+    True,
+    False,
 }
 
 impl Objecter for Boolean {
@@ -79,7 +83,7 @@ impl Objecter for Boolean {
         ObjectType::BOOL
     }
     fn inspect(&self) -> String {
-        format!("{}", self.value)
+        format!("{:?}", self)
     }
 }
 
@@ -139,14 +143,16 @@ impl Objecter for BuiltIn {
 }
 
 #[derive(Debug, Clone)]
-pub struct Null();
+pub struct Return {
+    pub value: Box<Object>,
+}
 
-impl Objecter for Null {
+impl Objecter for Return {
     fn obj_type(&self) -> ObjectType {
-        ObjectType::NULL
+        ObjectType::RETURN_VAL
     }
     fn inspect(&self) -> String {
-        "null".to_owned()
+        self.value.inspect()
     }
 }
 

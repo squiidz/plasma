@@ -69,7 +69,7 @@ impl Token {
 
     pub fn lookup_ident(ident: &str) -> TokenType {
         match KEYWORDS.get(ident) {
-            Some(t) => { t.clone() },
+            Some(t) => { *t },
             None => { TokenType::IDENT },
         }
     }

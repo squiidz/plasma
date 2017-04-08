@@ -90,14 +90,14 @@ impl Parser {
 
     fn cur_precedence(&self) -> PrecedenceType {
         match PRECEDENCES.get(&self.cur_token.token) {
-            Some(p) => { p.clone() },
+            Some(p) => { *p },
             None => { PrecedenceType::LOWEST }
         }
     }
 
     fn peek_precedence(&self) -> PrecedenceType {
         match PRECEDENCES.get(&self.peek_token.token) {
-            Some(p) => { p.clone() },
+            Some(p) => { *p },
             None => { PrecedenceType::LOWEST }
         }
     }
@@ -131,17 +131,18 @@ impl Parser {
 
     fn parse_expression_statement(&mut self) -> Option<Statement> {
         let cur_tok = self.cur_token.clone();
-        let exp = self.parse_expression(PrecedenceType::LOWEST);
+        if let Some(exp) = self.parse_expression(PrecedenceType::LOWEST) {
+            if self.peek_token_is(TokenType::SEMICOLON) {
+                self.next_token();
+            }
 
-        if self.peek_token_is(TokenType::SEMICOLON) {
-            self.next_token();
+            let exp_stmt =  Statement::EXPR_STMT(ExpressionStatement{
+                token: cur_tok,
+                expression: Some(Box::new(exp)),
+            });
+            return Some(exp_stmt)
         }
-
-        let exp_stmt =  Statement::EXPR_STMT(ExpressionStatement{
-            token: cur_tok,
-            expression: Some(Box::new(exp.unwrap())),
-        });
-        Some(exp_stmt)
+        None
     }
 
     fn parse_expression(&mut self, preced: PrecedenceType) -> Option<Expression> {
@@ -180,7 +181,7 @@ impl Parser {
     }
 
     fn parse_infix_expression(&mut self, left: Expression) -> Option<Expression> {
-        let preced = self.cur_precedence().clone();
+        let preced = self.cur_precedence();
         let cur_tok = self.cur_token.clone();
         let cur_op = cur_tok.literal.clone();
 
@@ -438,7 +439,7 @@ impl Parser {
         }
         let block = Statement::BLOCK_STMT(BlockStatement{
             token: cur_tok,
-            statements: Box::new(statements),
+            statements: statements,
         });
         Some(block)
     }

@@ -1,6 +1,5 @@
 use types::*;
 
-#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub enum Expression {
@@ -16,8 +15,8 @@ pub enum Expression {
     CALL(CallExpression),
 }
 
-impl Expression {
-    pub fn to_string(&self) -> String {
+impl Node for Expression {
+    fn to_string(&self) -> String {
         match *self {
             Expression::IDENT(ref ident) => ident.to_string(),
             Expression::BOOL(ref b) => b.to_string(),
@@ -32,7 +31,7 @@ impl Expression {
         }
     }
 
-    pub fn token_literal(&self) -> String {
+    fn token_literal(&self) -> String {
         match *self {
             Expression::IDENT(ref ident) => ident.token_literal(),
             Expression::BOOL(ref b) => b.token_literal(),
@@ -46,9 +45,23 @@ impl Expression {
             Expression::CALL(ref call) => call.token_literal(),         
         }
     }
+
+    fn node_type(&self) -> NodeType {
+        match *self {
+            Expression::IDENT(ref ident) => ident.node_type(),
+            Expression::BOOL(ref b) => b.node_type(),
+            Expression::INTEGER(ref int) => int.node_type(),
+            Expression::STRING(ref string) => string.node_type(),
+            Expression::ARRAY(ref arr) => arr.node_type(),
+            Expression::PREFIX(ref pre) => pre.node_type(),
+            Expression::INFIX(ref inf) => inf.node_type(),
+            Expression::IF(ref if_exp) => if_exp.node_type(),
+            Expression::FUNC(ref func) => func.node_type(),
+            Expression::CALL(ref call) => call.node_type(),         
+        }
+    }
 }
 
-#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub enum Statement {
@@ -58,8 +71,8 @@ pub enum Statement {
     RETURN(ReturnStatement),
 }
 
-impl Statement {
-    pub fn to_string(&self) -> String {
+impl Node for Statement {
+    fn to_string(&self) -> String {
         match *self {
             Statement::VAR(ref let_stmt) => let_stmt.to_string(),
             Statement::EXPR_STMT(ref expr_stmt) => expr_stmt.to_string(),
@@ -68,12 +81,21 @@ impl Statement {
         }
     }
 
-    pub fn token_literal(&self) -> String {
+    fn token_literal(&self) -> String {
         match *self {
             Statement::VAR(ref let_stmt) => let_stmt.token_literal(),
             Statement::EXPR_STMT(ref expr_stmt) => expr_stmt.token_literal(),
             Statement::BLOCK_STMT(ref blk_stmt) => blk_stmt.token_literal(),
             Statement::RETURN(ref rtn_stmt) => rtn_stmt.token_literal(),
+        }
+    }
+
+    fn node_type(&self) -> NodeType {
+        match *self {
+            Statement::VAR(ref let_stmt) => let_stmt.node_type(),
+            Statement::EXPR_STMT(ref expr_stmt) => expr_stmt.node_type(),
+            Statement::BLOCK_STMT(ref blk_stmt) => blk_stmt.node_type(),
+            Statement::RETURN(ref rtn_stmt) => rtn_stmt.node_type(),
         }
     }
 }
@@ -85,31 +107,31 @@ pub enum NodeType {
     Program(Program),
 }
 
-#[derive(Debug, Clone)]
-pub struct Node {
-    pub node_type: NodeType,
-    pub value: String,
+pub trait Node {
+    fn to_string(&self) -> String;
+    fn token_literal(&self) -> String;
+    fn node_type(&self) -> NodeType;
 }
 
-#[allow(dead_code)]
-impl Node {
-    pub fn new(nt: NodeType, value: &str) -> Node {
-        Node{node_type: nt, value: value.to_owned()}
-    }
+// #[allow(dead_code)]
+// impl Node {
+//     pub fn new(nt: NodeType, value: &str) -> Node {
+//         Node{node_type: nt, value: value.to_owned()}
+//     }
     
-    pub fn new_statement(stmt: Statement, value: &str) -> Node {
-        Node{node_type: NodeType::Statement(stmt), value: value.to_owned()} 
-    }
+//     pub fn new_statement(stmt: Statement, value: &str) -> Node {
+//         Node{node_type: NodeType::Statement(stmt), value: value.to_owned()} 
+//     }
     
-    pub fn new_expression(expr: Expression, value: &str) -> Node {
-        Node{node_type: NodeType::Expression(expr), value: value.to_owned()} 
-    }
+//     pub fn new_expression(expr: Expression, value: &str) -> Node {
+//         Node{node_type: NodeType::Expression(expr), value: value.to_owned()} 
+//     }
     
-    pub fn to_string(&self) -> String {
-        match self.node_type {
-            NodeType::Statement(ref stmt) => { stmt.to_string() },
-            NodeType::Expression(ref expr) => { expr.to_string() },
-            _ => { unimplemented!() }
-        }
-    }
-}
+//     pub fn to_string(&self) -> String {
+//         match self.node_type {
+//             NodeType::Statement(ref stmt) => { stmt.to_string() },
+//             NodeType::Expression(ref expr) => { expr.to_string() },
+//             _ => { unimplemented!() }
+//         }
+//     }
+// }

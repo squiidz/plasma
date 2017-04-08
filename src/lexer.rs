@@ -28,7 +28,7 @@ impl Lexer {
         match self.ch {
             '=' => {
                 if self.peek_char() == '=' {
-                    let ch = self.ch.clone();
+                    let ch = self.ch;
                     self.read_char();
                     tok = Token{
                         token: TokenType::EQ,
@@ -42,7 +42,7 @@ impl Lexer {
             '-' => { tok = Token::new(TokenType::MINUS, '-') },
             '!' => {
                 if self.peek_char() == '=' {
-                    let ch = self.ch.clone();
+                    let ch = self.ch;
                     self.read_char();
                     tok = Token{
                         token: TokenType::NOT_EQ,

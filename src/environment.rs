@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use object::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Environment {
     store: HashMap<String, Object>,
     out: Option<Box<Environment>>,
