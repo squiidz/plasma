@@ -1,12 +1,12 @@
 use ast::*;
 use environment::*;
 
-trait Objecter {
+pub trait Objecter {
     fn obj_type(&self) -> ObjectType;
     fn inspect(&self) -> String;
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ObjectType {
     INTEGER,
     STRING,
@@ -27,6 +27,32 @@ pub enum Object {
     BUILTIN(BuiltIn),
     NULL(Null),
     ERROR(Error),
+}
+
+impl Objecter for Object {
+    fn obj_type(&self) -> ObjectType {
+        match *self {
+            Object::INTEGER(ref int) => int.obj_type(),
+            Object::BOOL(ref b) => b.obj_type(),
+            Object::STRING(ref s) => s.obj_type(),
+            Object::FUNCTION(ref f) => f.obj_type(),
+            Object::BUILTIN(ref b) => b.obj_type(),
+            Object::NULL(ref n) => n.obj_type(),
+            Object::ERROR(ref e) => e.obj_type(),
+        }
+    }
+
+    fn inspect(&self) -> String {
+         match *self {
+            Object::INTEGER(ref int) => int.inspect(),
+            Object::BOOL(ref b) => b.inspect(),
+            Object::STRING(ref s) => s.inspect(),
+            Object::FUNCTION(ref f) => f.inspect(),
+            Object::BUILTIN(ref b) => b.inspect(),
+            Object::NULL(ref n) => n.inspect(),
+            Object::ERROR(ref e) => e.inspect(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

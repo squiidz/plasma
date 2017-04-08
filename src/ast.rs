@@ -87,8 +87,8 @@ pub enum NodeType {
 
 #[derive(Debug, Clone)]
 pub struct Node {
-    node_type: NodeType,
-    value: String,
+    pub node_type: NodeType,
+    pub value: String,
 }
 
 #[allow(dead_code)]
