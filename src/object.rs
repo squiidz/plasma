@@ -45,7 +45,7 @@ impl Objecter for Object {
     }
 
     fn inspect(&self) -> String {
-         match *self {
+        match *self {
             Object::INTEGER(ref int) => int.inspect(),
             Object::BOOL(ref b) => b.inspect(),
             Object::STRING(ref s) => s.inspect(),
@@ -60,7 +60,7 @@ impl Objecter for Object {
 
 #[derive(Debug, Clone)]
 pub struct Integer {
-    pub value: i64
+    pub value: i64,
 }
 
 impl Objecter for Integer {
@@ -89,7 +89,7 @@ impl Objecter for Boolean {
 
 #[derive(Debug, Clone)]
 pub struct Str {
-    value: String
+    value: String,
 }
 
 impl Objecter for Str {
@@ -114,7 +114,7 @@ impl Objecter for Func {
     }
     fn inspect(&self) -> String {
         let mut buff = String::new();
-        
+
         buff.push_str("function");
         buff.push('(');
         for p in self.parameters.clone() {
@@ -158,7 +158,7 @@ impl Objecter for Return {
 
 #[derive(Debug, Clone)]
 pub struct Error {
-    message: String
+    message: String,
 }
 
 impl Objecter for Error {

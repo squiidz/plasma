@@ -11,7 +11,7 @@ pub struct Lexer {
 
 impl Lexer {
     pub fn new(input: &str) -> Lexer {
-        let mut lex = Lexer{
+        let mut lex = Lexer {
             input: input.to_owned(),
             position: 0,
             read_position: 0,
@@ -30,59 +30,75 @@ impl Lexer {
                 if self.peek_char() == '=' {
                     let ch = self.ch;
                     self.read_char();
-                    tok = Token{
+                    tok = Token {
                         token: TokenType::EQ,
                         literal: ch.to_string() + &self.ch.to_string(),
                     };
                 } else {
                     tok = Token::new(TokenType::ASSIGN, self.ch)
                 }
-            },
-            '+' => { tok = Token::new(TokenType::PLUS, '+') },
-            '-' => { tok = Token::new(TokenType::MINUS, '-') },
+            }
+            '+' => tok = Token::new(TokenType::PLUS, '+'),
+            '-' => tok = Token::new(TokenType::MINUS, '-'),
             '!' => {
                 if self.peek_char() == '=' {
                     let ch = self.ch;
                     self.read_char();
-                    tok = Token{
+                    tok = Token {
                         token: TokenType::NOT_EQ,
                         literal: ch.to_string() + &self.ch.to_string(),
                     };
                 } else {
                     tok = Token::new(TokenType::BANG, self.ch)
                 }
-            },
-            '"' => { tok = Token{token: TokenType::STRING, literal: self.read_string()} },
-            '/' => { tok = Token::new(TokenType::SLASH, self.ch) },
-            '*' => { tok = Token::new(TokenType::ASTERISK, self.ch) },
-            '<' => { tok = Token::new(TokenType::LT, self.ch) },
-            '>' => { tok = Token::new(TokenType::GT, self.ch) },
-            ';' => { tok = Token::new(TokenType::SEMICOLON, self.ch) },
-            '(' => { tok = Token::new(TokenType::LPAREN, self.ch) },
-            ')' => { tok = Token::new(TokenType::RPAREN, self.ch) },
-            '[' => { tok = Token::new(TokenType::LBRACKET, self.ch) },
-            ']' => { tok = Token::new(TokenType::RBRACKET, self.ch) },
-            ',' => { tok = Token::new(TokenType::COMMA, self.ch) },
-            '{' => { tok = Token::new(TokenType::LBRACE, self.ch) },
-            '}' => { tok = Token::new(TokenType::RBRACE, self.ch) },
-            '0' => { tok = Token{token: TokenType::EOF, literal: "".to_owned()} },
+            }
+            '"' => {
+                tok = Token {
+                    token: TokenType::STRING,
+                    literal: self.read_string(),
+                }
+            }
+            '/' => tok = Token::new(TokenType::SLASH, self.ch),
+            '*' => tok = Token::new(TokenType::ASTERISK, self.ch),
+            '<' => tok = Token::new(TokenType::LT, self.ch),
+            '>' => tok = Token::new(TokenType::GT, self.ch),
+            ';' => tok = Token::new(TokenType::SEMICOLON, self.ch),
+            '(' => tok = Token::new(TokenType::LPAREN, self.ch),
+            ')' => tok = Token::new(TokenType::RPAREN, self.ch),
+            '[' => tok = Token::new(TokenType::LBRACKET, self.ch),
+            ']' => tok = Token::new(TokenType::RBRACKET, self.ch),
+            ',' => tok = Token::new(TokenType::COMMA, self.ch),
+            '{' => tok = Token::new(TokenType::LBRACE, self.ch),
+            '}' => tok = Token::new(TokenType::RBRACE, self.ch),
+            '0' => {
+                tok = Token {
+                    token: TokenType::EOF,
+                    literal: "".to_owned(),
+                }
+            }
             _ => {
                 if self.ch.is_alphabetic() {
                     let tok_lit = self.read_identifier();
                     let tok_type = Token::lookup_ident(tok_lit.as_str());
-                    tok = Token{token: tok_type, literal: tok_lit};
-                    return tok
+                    tok = Token {
+                        token: tok_type,
+                        literal: tok_lit,
+                    };
+                    return tok;
                 } else if self.ch.is_numeric() {
                     let tok_type = TokenType::INT;
                     let tok_lit = self.read_number();
-                    tok = Token{token: tok_type, literal: tok_lit };
-                    return tok
+                    tok = Token {
+                        token: tok_type,
+                        literal: tok_lit,
+                    };
+                    return tok;
                 }
                 tok = Token::new(TokenType::ILLEGAL, '0')
-            },
+            }
         }
-       self.read_char();
-       tok
+        self.read_char();
+        tok
     }
 
     fn read_char(&mut self) {

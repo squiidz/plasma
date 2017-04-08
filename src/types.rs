@@ -1,4 +1,4 @@
-use token::{Token};
+use token::Token;
 use ast::*;
 
 #[allow(dead_code)]
@@ -44,7 +44,7 @@ impl Node for Identifier {
     fn to_string(&self) -> String {
         self.value.to_owned()
     }
-        
+
     fn node_type(&self) -> NodeType {
         NodeType::Expression(Expression::IDENT(self.clone()))
     }
@@ -54,7 +54,7 @@ impl Node for Identifier {
 #[derive(Debug, Clone)]
 pub struct VarStatement {
     pub token: Token,
-    pub name:  Identifier,
+    pub name: Identifier,
     pub value: Option<Box<Expression>>,
 }
 
@@ -83,7 +83,7 @@ impl Node for VarStatement {
 #[derive(Debug, Clone)]
 pub struct ReturnStatement {
     pub token: Token,
-    pub return_value: Option<Box<Expression>>
+    pub return_value: Option<Box<Expression>>,
 }
 
 impl Node for ReturnStatement {
@@ -102,7 +102,7 @@ impl Node for ReturnStatement {
         out.push_str(";");
         out.to_owned()
     }
-    
+
     fn node_type(&self) -> NodeType {
         NodeType::Statement(Statement::RETURN(self.clone()))
     }
@@ -112,7 +112,7 @@ impl Node for ReturnStatement {
 #[derive(Debug, Clone)]
 pub struct ExpressionStatement {
     pub token: Token,
-    pub expression: Option<Box<Expression>>
+    pub expression: Option<Box<Expression>>,
 }
 
 impl Node for ExpressionStatement {
@@ -122,8 +122,8 @@ impl Node for ExpressionStatement {
 
     fn to_string(&self) -> String {
         match self.expression.as_ref() {
-            Some(v) => { v.to_string() },
-            None => { "".to_owned() },
+            Some(v) => v.to_string(),
+            None => "".to_owned(),
         }
     }
 
@@ -136,7 +136,7 @@ impl Node for ExpressionStatement {
 #[derive(Debug, Clone)]
 pub struct IntegerLiteral {
     pub token: Token,
-    pub value: i64
+    pub value: i64,
 }
 
 impl Node for IntegerLiteral {
@@ -147,7 +147,7 @@ impl Node for IntegerLiteral {
     fn to_string(&self) -> String {
         self.token.literal.to_owned()
     }
-    
+
     fn node_type(&self) -> NodeType {
         NodeType::Expression(Expression::INTEGER(self.clone()))
     }
@@ -187,8 +187,8 @@ impl Node for PrefixExpression {
 pub struct InfixExpression {
     pub token: Token,
     pub operator: String,
-    pub left:  Box<Expression>,
-    pub right: Box<Expression>
+    pub left: Box<Expression>,
+    pub right: Box<Expression>,
 }
 
 impl Node for InfixExpression {
@@ -201,13 +201,13 @@ impl Node for InfixExpression {
 
         out.push_str("(");
         out.push_str(self.left.to_string().as_str());
-        out.push_str(&format!(" {} " , self.operator));
+        out.push_str(&format!(" {} ", self.operator));
         out.push_str(self.right.to_string().as_str());
         out.push_str(")");
 
         out.to_owned()
     }
-    
+
     fn node_type(&self) -> NodeType {
         NodeType::Expression(Expression::INFIX(self.clone()))
     }
@@ -217,7 +217,7 @@ impl Node for InfixExpression {
 #[derive(Debug, Clone)]
 pub struct Boolean {
     pub token: Token,
-    pub value: bool
+    pub value: bool,
 }
 
 impl Node for Boolean {
@@ -228,7 +228,7 @@ impl Node for Boolean {
     fn to_string(&self) -> String {
         self.token.literal.to_owned()
     }
-    
+
     fn node_type(&self) -> NodeType {
         NodeType::Expression(Expression::BOOL(self.clone()))
     }
@@ -265,9 +265,9 @@ impl Node for BlockStatement {
 #[derive(Debug, Clone)]
 pub struct IfExpression {
     pub token: Token,
-    pub condition:   Box<Expression>,
+    pub condition: Box<Expression>,
     pub consequence: Box<Statement>,
-    pub alternative: Option<Statement>
+    pub alternative: Option<Statement>,
 }
 
 impl Node for IfExpression {
@@ -301,7 +301,7 @@ impl Node for IfExpression {
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Vec<Expression>,
-    pub body: Statement
+    pub body: Statement,
 }
 
 impl Node for FunctionLiteral {
@@ -335,7 +335,7 @@ impl Node for FunctionLiteral {
 pub struct CallExpression {
     pub token: Token,
     pub function: Box<Expression>,
-    pub arguments: Vec<Expression>
+    pub arguments: Vec<Expression>,
 }
 
 impl Node for CallExpression {
@@ -368,7 +368,7 @@ impl Node for CallExpression {
 #[derive(Debug, Clone)]
 pub struct StringLiteral {
     pub token: Token,
-    pub value: String
+    pub value: String,
 }
 
 impl Node for StringLiteral {
@@ -389,7 +389,7 @@ impl Node for StringLiteral {
 #[derive(Debug, Clone)]
 pub struct ArrayLiteral {
     pub token: Token,
-    pub elements: Vec<Expression>
+    pub elements: Vec<Expression>,
 }
 
 impl Node for ArrayLiteral {

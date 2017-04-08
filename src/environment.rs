@@ -10,7 +10,7 @@ pub struct Environment {
 
 impl Environment {
     pub fn new() -> Environment {
-        Environment{
+        Environment {
             store: HashMap::new(),
             out: None,
         }
@@ -24,9 +24,9 @@ impl Environment {
 
     pub fn get(&mut self, name: &str) -> Option<Object> {
         if let Some(obj) = self.store.get(name) {
-            return Some(obj.clone())
+            return Some(obj.clone());
         } else if let Some(ref mut out_env) = self.out {
-            return out_env.get(name)
+            return out_env.get(name);
         }
         None
     }

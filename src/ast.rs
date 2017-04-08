@@ -42,7 +42,7 @@ impl Node for Expression {
             Expression::INFIX(ref inf) => inf.token_literal(),
             Expression::IF(ref if_exp) => if_exp.token_literal(),
             Expression::FUNC(ref func) => func.token_literal(),
-            Expression::CALL(ref call) => call.token_literal(),         
+            Expression::CALL(ref call) => call.token_literal(),
         }
     }
 
@@ -57,7 +57,7 @@ impl Node for Expression {
             Expression::INFIX(ref inf) => inf.node_type(),
             Expression::IF(ref if_exp) => if_exp.node_type(),
             Expression::FUNC(ref func) => func.node_type(),
-            Expression::CALL(ref call) => call.node_type(),         
+            Expression::CALL(ref call) => call.node_type(),
         }
     }
 }
@@ -118,15 +118,15 @@ pub trait Node {
 //     pub fn new(nt: NodeType, value: &str) -> Node {
 //         Node{node_type: nt, value: value.to_owned()}
 //     }
-    
+
 //     pub fn new_statement(stmt: Statement, value: &str) -> Node {
-//         Node{node_type: NodeType::Statement(stmt), value: value.to_owned()} 
+//         Node{node_type: NodeType::Statement(stmt), value: value.to_owned()}
 //     }
-    
+
 //     pub fn new_expression(expr: Expression, value: &str) -> Node {
-//         Node{node_type: NodeType::Expression(expr), value: value.to_owned()} 
+//         Node{node_type: NodeType::Expression(expr), value: value.to_owned()}
 //     }
-    
+
 //     pub fn to_string(&self) -> String {
 //         match self.node_type {
 //             NodeType::Statement(ref stmt) => { stmt.to_string() },
