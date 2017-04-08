@@ -10,7 +10,7 @@ use plasma::evaluator::*;
 use plasma::environment::Environment;
 
 fn main() {
-    let lex = Lexer::new("let a = 5;");
+    let lex = Lexer::new("var test = 52;");
     let mut parser = Parser::new(lex);
     let prog = parser.parse_program();
     let mut env = Environment::new();

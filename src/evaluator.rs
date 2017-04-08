@@ -4,7 +4,6 @@ use object::{self, Object, ObjectType, Objecter};
 use environment::*;
 
 pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object> {
-    println!("NODE => {:?}", node);
     match *node {
         NodeType::Program(ref prog) => eval_program(prog, env),
         NodeType::Expression(ref exp) => {
@@ -15,8 +14,14 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
                             return Some(right);
                         }
                         return eval_prefix_expression(&prefix.operator, right);
-                    };
+                    }
                     None
+                }
+                Expression::IDENT(ref ident) => {
+                    return eval_identifier(ident, env)
+                }
+                Expression::INTEGER(ref int) => {
+                    return Some(Object::INTEGER(object::Integer{value: int.value}))
                 }
                 _ => unimplemented!(),
             }
@@ -24,7 +29,7 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
         NodeType::Statement(ref stmt) => {
             match *stmt {
                 Statement::VAR(ref var_stmt) => {
-                    if let Some(val) = eval(node, env) {
+                    if let Some(val) = eval(&NodeType::Expression(*var_stmt.clone().value.unwrap()), env) {
                         if is_error(&val) {
                             return Some(val);
                         }
@@ -71,6 +76,13 @@ fn eval_prefix_expression(op: &str, right: Object) -> Option<Object> {
         "-" => Some(parse_minus_operator(right)),
         _ => None,
     }
+}
+
+fn eval_identifier(node: &types::Identifier, env: &mut Environment) -> Option<Object> {
+    if let Some(v) = env.get(&node.value) {
+        return Some(v)
+    }
+    None
 }
 
 fn parse_bang_operator(right: Object) -> Object {
