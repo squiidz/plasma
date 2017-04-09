@@ -16,10 +16,10 @@ impl Environment {
         }
     }
 
-    pub fn new_enclosed(&mut self) {
+    pub fn new_enclosed(mut self) -> Environment {
         let env = Environment::new();
         self.out = Some(Box::new(env));
-        //Some(*self.out.unwrap())
+        *self.out.unwrap()
     }
 
     pub fn get(&mut self, name: &str) -> Option<Object> {

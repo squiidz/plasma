@@ -38,8 +38,20 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
                                                      // Env should be a ref instead of a clone
                                                      env: env.clone(),
                                                  }));
+                },
+                Expression::CALL(ref call) => {
+                    if let Some(func) = eval(&NodeType::Expression(*call.function.clone()), env) {
+                        if let Some(args) = eval_expression(call.clone().arguments, env) {
+                            // if args.len() == 1 {  }
+                            return apply_function(func, args)
+                        }
+                    }
+                    None
                 }
-                _ => panic!("INVALID EXPRESSION"),
+                _ => {
+                    println!("{:?}", exp);
+                    return Some(Object::NULL)
+                },
             }
         }
         NodeType::Statement(ref stmt) => {
@@ -63,20 +75,19 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
                     };
                     None
                 }
+                Statement::BLOCK_STMT(ref blk_stmt) => {
+                    return eval_block(blk_stmt.clone(), env)
+                }
                 Statement::RETURN(ref rtn) => {
                     match rtn.return_value {
                         Some(ref value) => {
-                            if let Some(exp_val) = Object::expression_mapping(*value.clone()) {
-                                return Some(Object::RETURN_VAL(object::Return {
-                                                                   value: Box::new(exp_val),
-                                                               }));
-                            }
-                            None
+                            let exp_val = Object::from(*value.clone());
+                            return Some(Object::RETURN_VAL(object::Return{value: Box::new(exp_val)}));
                         }
                         None => None,
                     }
                 }
-                _ => unimplemented!(),
+                _ => { println!("{:?}", stmt); None },
             }
         }
         _ => panic!("INVALID EXPRESSION"),
@@ -102,6 +113,17 @@ fn eval_program(program: &Program, env: &mut Environment) -> Option<Object> {
     result
 }
 
+fn eval_expression(exps: Vec<Expression>, env: &mut Environment) -> Option<Vec<Object>> {
+    let mut result: Vec<Object> = Vec::new();
+
+    for exp in exps {
+        if let Some(evaluated) = eval(&NodeType::Expression(exp), env) {
+            result.push(evaluated)
+        }
+    }
+    Some(result)
+}
+
 fn eval_prefix_expression(op: &str, right: Object) -> Option<Object> {
     match op {
         "!" => eval_bang_operator(right),
@@ -123,6 +145,20 @@ fn eval_infix_expression(op: &str, left: Object, right: Object) -> Option<Object
         unimplemented!()
     }
     return unimplemented!();
+}
+
+fn eval_block(block: types::BlockStatement, env: &mut Environment) -> Option<Object> {
+    let mut result = Object::NULL;
+
+    for stmt in block.statements {
+        if let Some(res) = eval(&NodeType::Statement(stmt), env) {
+            result = res;
+            if result.obj_type() == ObjectType::RETURN_VAL || result.obj_type() == ObjectType::ERROR {
+                return Some(result)
+            }
+        }
+    }
+    Some(result)
 }
 
 fn eval_identifier(node: &types::Identifier, env: &mut Environment) -> Option<Object> {
@@ -202,6 +238,39 @@ fn native_boolean_object(input: bool) -> Option<Object> {
         return Some(Object::BOOL(object::Boolean::True));
     }
     Some(Object::BOOL(object::Boolean::False))
+}
+
+fn apply_function(func: Object, args: Vec<Object>) -> Option<Object> {
+    match func {
+        Object::FUNCTION(fun) => {
+            if let Some(mut ext_env) = extend_function_env(fun.clone(), &args) {
+                if let Some(evaluated) = eval(&NodeType::Statement(fun.body), &mut ext_env) {
+                    return unwrap_return_value(evaluated)
+                }
+            }
+            None
+        },
+        Object::BUILTIN(ref blt_in) => {
+            unimplemented!()
+        },
+        _ => return Some(Object::ERROR(object::Error{message: "Invalid Type".to_owned()})),
+    }
+}
+
+fn extend_function_env(func: object::Func, args: &[Object]) -> Option<Environment> {
+    let mut new_env = func.env.new_enclosed();
+    for (id, param) in func.parameters.iter().enumerate() {
+        // params.to_string() is not the correct key, should be param.value
+        new_env.set(&param.to_string(), args[id].clone());
+    }
+    Some(new_env)
+}
+
+fn unwrap_return_value(obj: Object) -> Option<Object> {
+    if let Object::RETURN_VAL(rtn_val) = obj {
+        return Some(*rtn_val.value)
+    }
+    Some(obj)
 }
 
 fn is_error(obj: &Object) -> bool {

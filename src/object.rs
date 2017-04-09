@@ -30,11 +30,11 @@ pub enum Object {
     ERROR(Error),
 }
 
-impl Object {
-    pub fn expression_mapping(exp: Expression) -> Option<Object> {
+impl From<Expression> for Object {
+    fn from(exp: Expression) -> Object {
         match exp {
-            Expression::INTEGER(v) => Some(Object::INTEGER(Integer { value: v.value })),
-            _ => None,
+            Expression::INTEGER(v) => Object::INTEGER(Integer { value: v.value }),
+            _ => Object::NULL,
         }
     }
 }
@@ -167,7 +167,7 @@ impl Objecter for Return {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Error {
-    message: String,
+    pub message: String,
 }
 
 impl Objecter for Error {
