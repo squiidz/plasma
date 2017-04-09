@@ -1,23 +1,15 @@
 extern crate plasma;
 
-#[allow(unused_imports)]
-use plasma::token::{Token, TokenType};
-#[allow(unused_imports)]
-use plasma::ast::{Node, Statement, NodeType};
-use plasma::lexer::Lexer;
-use plasma::parser::Parser;
-use plasma::evaluator::*;
-use plasma::environment::Environment;
+use plasma::interpreter;
 
 fn main() {
-    let lex = Lexer::new("
-            var test = 5 + 5 - 2;
-            var new = test + 5;
-    ");
-    let mut parser = Parser::new(lex);
-    let prog = parser.parse_program();
-    let mut env = Environment::new();
+    let code = "
+        var ten = 5 + 5;
+        var res = ten * 5 / 2;
+        res == ten;
+    ";
 
-    println!("{}", prog.to_string());
-    println!("{:?}", eval(&NodeType::Program(prog), &mut env));
+    if let Ok(result) = interpreter::execute(code) {
+        println!("{}", result);
+    }
 }

@@ -33,7 +33,6 @@ impl Environment {
 
     pub fn set(&mut self, name: &str, obj: Object) -> Option<Object> {
         let o = self.store.insert(name.to_owned(), obj);
-        println!("ENV => {:?}", self);
-        return o
+        return o;
     }
 }

@@ -33,8 +33,8 @@ pub enum Object {
 impl Object {
     pub fn expression_mapping(exp: Expression) -> Option<Object> {
         match exp {
-            Expression::INTEGER(v) => Some(Object::INTEGER(Integer{value: v.value})),
-            _ => None
+            Expression::INTEGER(v) => Some(Object::INTEGER(Integer { value: v.value })),
+            _ => None,
         }
     }
 }
