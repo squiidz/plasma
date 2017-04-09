@@ -10,10 +10,14 @@ use plasma::evaluator::*;
 use plasma::environment::Environment;
 
 fn main() {
-    let lex = Lexer::new("var test = 52;");
+    let lex = Lexer::new("
+            var test = 5 + 5 - 2;
+            var new = test + 5;
+    ");
     let mut parser = Parser::new(lex);
     let prog = parser.parse_program();
     let mut env = Environment::new();
-    eval(&NodeType::Program(prog), &mut env);
-    //println!("{}", prog.to_string());
+
+    println!("{}", prog.to_string());
+    println!("{:?}", eval(&NodeType::Program(prog), &mut env));
 }

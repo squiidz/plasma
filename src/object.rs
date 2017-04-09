@@ -18,7 +18,7 @@ pub enum ObjectType {
     ERROR,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     INTEGER(Integer),
     BOOL(Boolean),
@@ -28,6 +28,15 @@ pub enum Object {
     RETURN_VAL(Return),
     NULL,
     ERROR(Error),
+}
+
+impl Object {
+    pub fn expression_mapping(exp: Expression) -> Option<Object> {
+        match exp {
+            Expression::INTEGER(v) => Some(Object::INTEGER(Integer{value: v.value})),
+            _ => None
+        }
+    }
 }
 
 impl Objecter for Object {
@@ -58,7 +67,7 @@ impl Objecter for Object {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Integer {
     pub value: i64,
 }
@@ -72,7 +81,7 @@ impl Objecter for Integer {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Boolean {
     True,
     False,
@@ -87,9 +96,9 @@ impl Objecter for Boolean {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Str {
-    value: String,
+    pub value: String,
 }
 
 impl Objecter for Str {
@@ -101,11 +110,11 @@ impl Objecter for Str {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Func {
-    parameters: Vec<Expression>,
-    body: Statement,
-    env: Environment,
+    pub parameters: Vec<Expression>,
+    pub body: Statement,
+    pub env: Environment,
 }
 
 impl Objecter for Func {
@@ -128,7 +137,7 @@ impl Objecter for Func {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BuiltIn {
     func: fn(Vec<String>) -> Object,
 }
@@ -142,7 +151,7 @@ impl Objecter for BuiltIn {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Return {
     pub value: Box<Object>,
 }
@@ -156,7 +165,7 @@ impl Objecter for Return {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Error {
     message: String,
 }

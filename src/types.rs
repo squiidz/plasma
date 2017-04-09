@@ -2,7 +2,7 @@ use token::Token;
 use ast::*;
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Program {
     pub statements: Vec<Box<Statement>>,
 }
@@ -30,7 +30,7 @@ impl Node for Program {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Identifier {
     pub token: Token,
     pub value: String,
@@ -51,7 +51,7 @@ impl Node for Identifier {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct VarStatement {
     pub token: Token,
     pub name: Identifier,
@@ -80,7 +80,7 @@ impl Node for VarStatement {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ReturnStatement {
     pub token: Token,
     pub return_value: Option<Box<Expression>>,
@@ -109,7 +109,7 @@ impl Node for ReturnStatement {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ExpressionStatement {
     pub token: Token,
     pub expression: Option<Box<Expression>>,
@@ -133,7 +133,7 @@ impl Node for ExpressionStatement {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IntegerLiteral {
     pub token: Token,
     pub value: i64,
@@ -154,7 +154,7 @@ impl Node for IntegerLiteral {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PrefixExpression {
     pub token: Token,
     pub operator: String,
@@ -183,7 +183,7 @@ impl Node for PrefixExpression {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InfixExpression {
     pub token: Token,
     pub operator: String,
@@ -214,7 +214,7 @@ impl Node for InfixExpression {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Boolean {
     pub token: Token,
     pub value: bool,
@@ -235,7 +235,7 @@ impl Node for Boolean {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BlockStatement {
     pub token: Token,
     pub statements: Vec<Statement>,
@@ -262,7 +262,7 @@ impl Node for BlockStatement {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct IfExpression {
     pub token: Token,
     pub condition: Box<Expression>,
@@ -297,7 +297,7 @@ impl Node for IfExpression {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Vec<Expression>,
@@ -331,7 +331,7 @@ impl Node for FunctionLiteral {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CallExpression {
     pub token: Token,
     pub function: Box<Expression>,
@@ -365,7 +365,7 @@ impl Node for CallExpression {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StringLiteral {
     pub token: Token,
     pub value: String,
@@ -386,7 +386,7 @@ impl Node for StringLiteral {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ArrayLiteral {
     pub token: Token,
     pub elements: Vec<Expression>,

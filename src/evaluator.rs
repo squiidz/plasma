@@ -17,13 +17,33 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
                     }
                     None
                 }
+                Expression::INFIX(ref infix) => {
+                    // left and right should not be unwraped
+                    let left = eval(&NodeType::Expression(*infix.clone().left), env);
+                    let right = eval(&NodeType::Expression(*infix.clone().right), env);
+                    return eval_infix_expression(&infix.operator, left.unwrap(), right.unwrap());
+                }
                 Expression::IDENT(ref ident) => {
                     return eval_identifier(ident, env)
                 }
                 Expression::INTEGER(ref int) => {
                     return Some(Object::INTEGER(object::Integer{value: int.value}))
                 }
-                _ => unimplemented!(),
+                Expression::BOOL(ref bo) => {
+                    return native_boolean_object(bo.value)
+                }
+                Expression::STRING(ref str_lit) => {
+                    return Some(Object::STRING(object::Str{value: str_lit.clone().value}))
+                }
+                Expression::FUNC(ref func) => {
+                    return Some(Object::FUNCTION(object::Func{
+                        parameters: func.parameters.clone(),
+                        body: func.body.clone(),
+                        // Env should be a ref instead of a clone
+                        env: env.clone(),
+                    }))
+                }
+                _ => panic!("INVALID EXPRESSION"),
             }
         }
         NodeType::Statement(ref stmt) => {
@@ -43,12 +63,24 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
                     };
                     None
                 }
+                Statement::RETURN(ref rtn) => {
+                    match rtn.return_value {
+                        Some(ref value) => {
+                            if let Some(exp_val) = Object::expression_mapping(*value.clone()) {
+                                return Some(Object::RETURN_VAL(
+                                    object::Return{value: Box::new(exp_val)}
+                                ))
+                            }
+                            None
+                        },
+                        None => None,
+                    }
+                }
                 _ => unimplemented!(),
             }
         }
         _ => panic!("INVALID EXPRESSION"),
-    };
-    None
+    }
 }
 
 fn eval_program(program: &Program, env: &mut Environment) -> Option<Object> {
@@ -64,7 +96,7 @@ fn eval_program(program: &Program, env: &mut Environment) -> Option<Object> {
                     _ => continue,
                 }
             },
-            None => return result,
+            None => continue,
         }
     }
     result
@@ -72,10 +104,25 @@ fn eval_program(program: &Program, env: &mut Environment) -> Option<Object> {
 
 fn eval_prefix_expression(op: &str, right: Object) -> Option<Object> {
     match op {
-        "!" => Some(parse_bang_operator(right)),
-        "-" => Some(parse_minus_operator(right)),
+        "!" => eval_bang_operator(right),
+        "-" => eval_minus_prefix_operator(right),
         _ => None,
     }
+}
+
+fn eval_infix_expression(op: &str, left: Object, right: Object) -> Option<Object> {
+    if left.obj_type() == ObjectType::INTEGER && right.obj_type() == ObjectType::INTEGER {
+        return eval_integer_infix(op, left, right)
+    } else if left.obj_type() == ObjectType::STRING && right.obj_type() == ObjectType::STRING {
+        return eval_string_infix(op, left, right)
+    } else if op == "==" {
+        return native_boolean_object(left == right)
+    } else if op == "!=" {
+        return native_boolean_object(left != right)
+    } else if left.obj_type() != right.obj_type() {
+        unimplemented!()
+    }
+    return unimplemented!()
 }
 
 fn eval_identifier(node: &types::Identifier, env: &mut Environment) -> Option<Object> {
@@ -85,22 +132,76 @@ fn eval_identifier(node: &types::Identifier, env: &mut Environment) -> Option<Ob
     None
 }
 
-fn parse_bang_operator(right: Object) -> Object {
-    if let Object::BOOL(b) = right {
-        match b {
-            object::Boolean::True => Object::BOOL(object::Boolean::False),
-            object::Boolean::False => Object::BOOL(object::Boolean::True),
-        }
-    } else {
-        match right {
-            Object::NULL => Object::BOOL(object::Boolean::True),
-            _ => Object::BOOL(object::Boolean::False),
-        }
+fn eval_integer_infix(op: &str, left: Object, right: Object) -> Option<Object> {
+    let left_value = match left {
+        Object::INTEGER(v) => v.value,
+        _ => return None,
+    };
+    let right_value = match right {
+        Object::INTEGER(v) => v.value,
+        _ => return None,
+    };
+    
+    match op {
+        "+" => return Some(Object::INTEGER(object::Integer{value: left_value + right_value})),
+        "-" => return Some(Object::INTEGER(object::Integer{value: left_value - right_value})),
+        "*" => return Some(Object::INTEGER(object::Integer{value: left_value * right_value})),
+        "/" => return Some(Object::INTEGER(object::Integer{value: left_value / right_value})),
+        "<" => return native_boolean_object(left_value < right_value),
+        ">" => return native_boolean_object(left_value > right_value),
+        "==" => return native_boolean_object(left_value == right_value),
+        "!=" => return native_boolean_object(left_value != right_value),
+        _ => return None,
     }
 }
 
-fn parse_minus_operator(right: Object) -> Object {
-    unimplemented!()
+fn eval_string_infix(op: &str, left: Object, right: Object) -> Option<Object> {
+    if op != "+" {
+        return None
+    }
+    let left_value = match left {
+        Object::STRING(v) => v.value,
+        _ => return None,
+    };
+    let right_value = match right {
+        Object::STRING(v) => v.value,
+        _ => return None,
+    };
+    return Some(Object::STRING(object::Str{value: left_value + &right_value}))
+}
+
+fn eval_bang_operator(right: Object) -> Option<Object> {
+    if let Object::BOOL(b) = right {
+        let v = match b {
+            object::Boolean::True => Object::BOOL(object::Boolean::False),
+            object::Boolean::False => Object::BOOL(object::Boolean::True),
+        };
+        return Some(v)
+    } else {
+        let v = match right {
+            Object::NULL => Object::BOOL(object::Boolean::True),
+            _ => Object::BOOL(object::Boolean::False),
+        };
+        return Some(v)
+    }
+}
+
+fn eval_minus_prefix_operator(right: Object) -> Option<Object> {
+    if right.obj_type() !=ObjectType::INTEGER {
+        return None
+    }
+    let value = match right {
+        Object::INTEGER(v) => v.value,
+        _ => return None,
+    };
+    return Some(Object::INTEGER(object::Integer{value: -value}));
+}
+
+fn native_boolean_object(input: bool) -> Option<Object> {
+    if input {
+        return Some(Object::BOOL(object::Boolean::True))
+    }
+    Some(Object::BOOL(object::Boolean::False))
 }
 
 fn is_error(obj: &Object) -> bool {

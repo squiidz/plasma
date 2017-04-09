@@ -1,7 +1,7 @@
 use types::*;
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
     IDENT(Identifier),
     BOOL(Boolean),
@@ -63,7 +63,7 @@ impl Node for Expression {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     VAR(VarStatement),
     EXPR_STMT(ExpressionStatement),
@@ -100,7 +100,7 @@ impl Node for Statement {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum NodeType {
     Expression(Expression),
     Statement(Statement),
