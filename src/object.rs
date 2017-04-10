@@ -34,6 +34,7 @@ impl From<Expression> for Object {
     fn from(exp: Expression) -> Object {
         match exp {
             Expression::INTEGER(v) => Object::INTEGER(Integer { value: v.value }),
+            Expression::STRING(s) => Object::STRING(Str { value: s.value }),
             _ => Object::NULL,
         }
     }

@@ -18,13 +18,14 @@ pub mod interpreter {
     use object::Objecter;
     use ast::NodeType;
 
+    #[derive(Default)]
     pub struct Executor {
         variables: Environment,
     }
 
     impl Executor {
         pub fn new() -> Executor {
-            Executor{ variables: Environment::new() }
+            Executor{ variables: Environment::default() }
         }
 
         pub fn execute(&mut self, code: &str) -> Result<String, String> {

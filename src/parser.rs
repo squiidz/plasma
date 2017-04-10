@@ -424,29 +424,27 @@ impl Parser {
             return None;
         }
         self.next_token();
-
         let exp_cond = self.parse_expression(PrecedenceType::LOWEST);
-        if self.peek_token_is(TokenType::RPAREN) || self.peek_token_is(TokenType::LBRACE) {
+        if !self.expect_peek(TokenType::RPAREN) || !self.expect_peek(TokenType::LBRACE) {
             return None;
         }
 
         let exp_cons = self.parse_block_statement();
-        let peek_tok = self.peek_token.clone();
-        if peek_tok.token == TokenType::ELSE {
+        let mut exp_alt = None;
+        if self.peek_token_is(TokenType::ELSE) {
             self.next_token();
             if !self.expect_peek(TokenType::LBRACE) {
                 return None;
             }
-            let exp_alt = self.parse_block_statement();
-            let if_exp = Expression::IF(IfExpression {
-                                            token: cur_tok,
-                                            condition: Box::new(exp_cond.unwrap()),
-                                            consequence: Box::new(exp_cons.unwrap()),
-                                            alternative: exp_alt,
-                                        });
-            return Some(if_exp);
+            exp_alt = self.parse_block_statement();
         }
-        None
+
+        Some(Expression::IF(IfExpression {
+                                token: cur_tok,
+                                condition: Box::new(exp_cond.unwrap()),
+                                consequence: Box::new(exp_cons.unwrap()),
+                                alternative: exp_alt,
+                            }))
     }
 
     fn parse_block_statement(&mut self) -> Option<Statement> {

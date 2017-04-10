@@ -31,6 +31,9 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
                 Expression::STRING(ref str_lit) => {
                     return Some(Object::STRING(object::Str { value: str_lit.clone().value }))
                 }
+                Expression::IF(ref if_exp) => {
+                    return eval_if_expression(if_exp.clone(), env)
+                }
                 Expression::FUNC(ref func) => {
                     return Some(Object::FUNCTION(object::Func {
                                                      parameters: func.parameters.clone(),
@@ -79,15 +82,14 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
                     return eval_block(blk_stmt.clone(), env)
                 }
                 Statement::RETURN(ref rtn) => {
-                    match rtn.return_value {
-                        Some(ref value) => {
-                            let exp_val = Object::from(*value.clone());
+                    if let Some(rtn_val) = rtn.return_value.clone() {
+                        if let Some(value) = eval(&NodeType::Expression(*rtn_val), env) {
+                            let exp_val = Object::from(value);
                             return Some(Object::RETURN_VAL(object::Return{value: Box::new(exp_val)}));
                         }
-                        None => None,
                     }
+                    None
                 }
-                _ => { println!("{:?}", stmt); None },
             }
         }
         _ => panic!("INVALID EXPRESSION"),
@@ -142,9 +144,20 @@ fn eval_infix_expression(op: &str, left: Object, right: Object) -> Option<Object
     } else if op == "!=" {
         return native_boolean_object(left != right);
     } else if left.obj_type() != right.obj_type() {
-        return eval_string_infix("+", left, right)
+        return eval_string_infix(op, left, right)
     }
     return unimplemented!();
+}
+
+fn eval_if_expression(if_exp: types::IfExpression, env: &mut Environment) -> Option<Object> {
+    if let Some(condition) = eval(&NodeType::Expression(*if_exp.condition), env) {
+        if is_truthy(condition) {
+            return eval(&NodeType::Statement(*if_exp.consequence), env)
+        } else if let Some(alt) = if_exp.alternative {
+            return eval(&NodeType::Statement(alt), env)
+        }
+    }
+    None
 }
 
 fn eval_block(block: types::BlockStatement, env: &mut Environment) -> Option<Object> {
@@ -271,6 +284,19 @@ fn unwrap_return_value(obj: Object) -> Option<Object> {
         return Some(*rtn_val.value)
     }
     Some(obj)
+}
+
+fn is_truthy(obj: Object) -> bool {
+    match obj {
+        Object::NULL => false,
+        Object::BOOL(b) => {
+            match b {
+                object::Boolean::True => true,
+                object::Boolean::False => false,
+            }
+        }
+        _ => true
+    }
 }
 
 fn is_error(obj: &Object) -> bool {
