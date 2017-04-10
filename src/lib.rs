@@ -18,15 +18,25 @@ pub mod interpreter {
     use object::Objecter;
     use ast::NodeType;
 
-    pub fn execute(code: &str) -> Result<String, String> {
-        let lex = Lexer::new(code);
-        let mut parser = Parser::new(lex);
-        let prog = parser.parse_program();
-        let mut env = Environment::new();
+    pub struct Executor {
+        variables: Environment,
+    }
 
-        match eval(&NodeType::Program(prog), &mut env) {
-            Some(res) => Ok(res.inspect()),
-            None => Err("Invalid code".to_owned()),
+    impl Executor {
+        pub fn new() -> Executor {
+            Executor{ variables: Environment::new() }
         }
+
+        pub fn execute(&mut self, code: &str) -> Result<String, String> {
+            let lex = Lexer::new(code);
+            let mut parser = Parser::new(lex);
+            let prog = parser.parse_program();
+
+            match eval(&NodeType::Program(prog), &mut self.variables) {
+                Some(res) => Ok(res.inspect()),
+                None => Err("empty result".to_owned()),
+            }
+        }
+
     }
 }
