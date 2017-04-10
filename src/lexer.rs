@@ -121,10 +121,10 @@ impl Lexer {
     }
 
     fn read_string(&mut self) -> String {
-        let position = self.position;
-        while self.ch.is_alphabetic() {
+        let position = self.position + 1;
+        loop {
             self.read_char();
-            if self.ch == '=' {
+            if self.ch == '"' {
                 break;
             }
         }

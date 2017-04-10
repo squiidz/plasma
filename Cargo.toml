@@ -5,3 +5,7 @@ authors = ["jchaput <piinkyz05@gmail.com>"]
 
 [dependencies]
 lazy_static = "*"
+
+[[bin]]
+name = "plasma"
+path = "src/bin/main.rs"
