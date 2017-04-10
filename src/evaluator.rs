@@ -142,7 +142,7 @@ fn eval_infix_expression(op: &str, left: Object, right: Object) -> Option<Object
     } else if op == "!=" {
         return native_boolean_object(left != right);
     } else if left.obj_type() != right.obj_type() {
-        unimplemented!()
+        return eval_string_infix("+", left, right)
     }
     return unimplemented!();
 }
@@ -197,11 +197,11 @@ fn eval_string_infix(op: &str, left: Object, right: Object) -> Option<Object> {
     }
     let left_value = match left {
         Object::STRING(v) => v.value,
-        _ => return None,
+        _ => left.inspect(),
     };
     let right_value = match right {
         Object::STRING(v) => v.value,
-        _ => return None,
+        _ => right.inspect(),
     };
     return Some(Object::STRING(object::Str { value: left_value + &right_value }));
 }

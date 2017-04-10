@@ -1,0 +1,8 @@
+var square = function(num) {
+  var n = num * 2;
+  if (n > 0) {
+    n
+  }
+};
+
+"The surface is " + square(400)

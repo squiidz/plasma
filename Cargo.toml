@@ -5,6 +5,7 @@ authors = ["jchaput <piinkyz05@gmail.com>"]
 
 [dependencies]
 lazy_static = "*"
+clap = "*"
 
 [[bin]]
 name = "plasma"
