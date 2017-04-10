@@ -25,7 +25,7 @@ pub mod interpreter {
 
     impl Executor {
         pub fn new() -> Executor {
-            Executor{ variables: Environment::default() }
+            Executor { variables: Environment::default() }
         }
 
         pub fn execute(&mut self, code: &str) -> Result<String, String> {
@@ -38,6 +38,5 @@ pub mod interpreter {
                 None => Err("empty result".to_owned()),
             }
         }
-
     }
 }

@@ -6,93 +6,90 @@ use environment::*;
 pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object> {
     match *node {
         NodeType::Program(ref prog) => eval_program(prog, env),
-        NodeType::Expression(ref exp) => {
-            match *exp {
-                Expression::PREFIX(ref prefix) => {
-                    if let Some(right) = eval(&NodeType::Expression(*prefix.right.clone()), env) {
-                        if is_error(&right) {
-                            return Some(right);
-                        }
-                        return eval_prefix_expression(&prefix.operator, right);
-                    }
-                    None
-                }
-                Expression::INFIX(ref infix) => {
-                    // left and right should not be unwraped
-                    let left = eval(&NodeType::Expression(*infix.clone().left), env);
-                    let right = eval(&NodeType::Expression(*infix.clone().right), env);
-                    return eval_infix_expression(&infix.operator, left.unwrap(), right.unwrap());
-                }
-                Expression::IDENT(ref ident) => return eval_identifier(ident, env),
-                Expression::INTEGER(ref int) => {
-                    return Some(Object::INTEGER(object::Integer { value: int.value }))
-                }
-                Expression::BOOL(ref bo) => return native_boolean_object(bo.value),
-                Expression::STRING(ref str_lit) => {
-                    return Some(Object::STRING(object::Str { value: str_lit.clone().value }))
-                }
-                Expression::IF(ref if_exp) => {
-                    return eval_if_expression(if_exp.clone(), env)
-                }
-                Expression::FUNC(ref func) => {
-                    return Some(Object::FUNCTION(object::Func {
-                                                     parameters: func.parameters.clone(),
-                                                     body: func.body.clone(),
-                                                     // Env should be a ref instead of a clone
-                                                     env: env.clone(),
-                                                 }));
-                },
-                Expression::CALL(ref call) => {
-                    if let Some(func) = eval(&NodeType::Expression(*call.function.clone()), env) {
-                        if let Some(args) = eval_expression(call.clone().arguments, env) {
-                            // if args.len() == 1 {  }
-                            return apply_function(func, args)
-                        }
-                    }
-                    None
-                }
-                _ => {
-                    println!("{:?}", exp);
-                    return Some(Object::NULL)
-                },
-            }
-        }
-        NodeType::Statement(ref stmt) => {
-            match *stmt {
-                Statement::VAR(ref var_stmt) => {
-                    if let Some(val) = eval(&NodeType::Expression(*var_stmt
-                                                                       .clone()
-                                                                       .value
-                                                                       .unwrap()),
-                                            env) {
-                        if is_error(&val) {
-                            return Some(val);
-                        }
-                        return env.set(var_stmt.name.value.as_str(), val);
-                    }
-                    None
-                }
-                Statement::EXPR_STMT(ref exp_stmt) => {
-                    if let Some(ref expr) = exp_stmt.expression {
-                        return eval(&NodeType::Expression(*expr.clone()), env);
-                    };
-                    None
-                }
-                Statement::BLOCK_STMT(ref blk_stmt) => {
-                    return eval_block(blk_stmt.clone(), env)
-                }
-                Statement::RETURN(ref rtn) => {
-                    if let Some(rtn_val) = rtn.return_value.clone() {
-                        if let Some(value) = eval(&NodeType::Expression(*rtn_val), env) {
-                            let exp_val = Object::from(value);
-                            return Some(Object::RETURN_VAL(object::Return{value: Box::new(exp_val)}));
-                        }
-                    }
-                    None
-                }
-            }
-        }
+        NodeType::Expression(ref exp) => eval_expression_type(exp, env),
+        NodeType::Statement(ref stmt) => eval_statement_type(stmt, env),
         _ => panic!("INVALID EXPRESSION"),
+    }
+}
+
+fn eval_expression_type(exp: &Expression, env: &mut Environment) -> Option<Object> {
+    match *exp {
+        Expression::PREFIX(ref prefix) => {
+            if let Some(right) = eval(&NodeType::Expression(*prefix.right.clone()), env) {
+                if is_error(&right) {
+                    return Some(right);
+                }
+                return eval_prefix_expression(&prefix.operator, right);
+            }
+            None
+        }
+        Expression::INFIX(ref infix) => {
+            if let Some(left) = eval(&NodeType::Expression(*infix.clone().left), env) {
+                if let Some(right) = eval(&NodeType::Expression(*infix.clone().right), env) {
+                    return eval_infix_expression(&infix.operator, left, right);
+                }
+            }
+            None
+        }
+        Expression::IDENT(ref ident) => return eval_identifier(ident, env),
+        Expression::INTEGER(ref int) => {
+            return Some(Object::INTEGER(object::Integer { value: int.value }))
+        }
+        Expression::BOOL(ref bo) => return native_boolean_object(bo.value),
+        Expression::STRING(ref str_lit) => {
+            return Some(Object::STRING(object::Str { value: str_lit.clone().value }))
+        }
+        Expression::IF(ref if_exp) => return eval_if_expression(if_exp.clone(), env),
+        Expression::FUNC(ref func) => {
+            return Some(Object::FUNCTION(object::Func {
+                                             parameters: func.parameters.clone(),
+                                             body: func.body.clone(),
+                                             // Env should be a ref instead of a clone
+                                             env: env.clone(),
+                                         }));
+        }
+        Expression::CALL(ref call) => {
+            if let Some(func) = eval(&NodeType::Expression(*call.function.clone()), env) {
+                if let Some(args) = eval_expression(call.clone().arguments, env) {
+                    return apply_function(func, args);
+                }
+            }
+            None
+        }
+        _ => {
+            println!("{:?}", exp);
+            return Some(Object::NULL);
+        }
+    }
+}
+
+fn eval_statement_type(stmt: &Statement, env: &mut Environment) -> Option<Object> {
+    match *stmt {
+        Statement::VAR(ref var_stmt) => {
+            if let Some(val) = eval(&NodeType::Expression(*var_stmt.clone().value.unwrap()), env) {
+                if is_error(&val) {
+                    return Some(val);
+                }
+                return env.set(var_stmt.name.value.as_str(), val);
+            }
+            None
+        }
+        Statement::EXPR_STMT(ref exp_stmt) => {
+            if let Some(ref expr) = exp_stmt.expression {
+                return eval(&NodeType::Expression(*expr.clone()), env);
+            };
+            None
+        }
+        Statement::BLOCK_STMT(ref blk_stmt) => return eval_block(blk_stmt.clone(), env),
+        Statement::RETURN(ref rtn) => {
+            if let Some(rtn_val) = rtn.return_value.clone() {
+                if let Some(value) = eval(&NodeType::Expression(*rtn_val), env) {
+                    let exp_val = Object::from(value);
+                    return Some(Object::RETURN_VAL(object::Return { value: Box::new(exp_val) }));
+                }
+            }
+            None
+        }
     }
 }
 
@@ -144,7 +141,7 @@ fn eval_infix_expression(op: &str, left: Object, right: Object) -> Option<Object
     } else if op == "!=" {
         return native_boolean_object(left != right);
     } else if left.obj_type() != right.obj_type() {
-        return eval_string_infix(op, left, right)
+        return eval_string_infix(op, left, right);
     }
     return unimplemented!();
 }
@@ -152,9 +149,9 @@ fn eval_infix_expression(op: &str, left: Object, right: Object) -> Option<Object
 fn eval_if_expression(if_exp: types::IfExpression, env: &mut Environment) -> Option<Object> {
     if let Some(condition) = eval(&NodeType::Expression(*if_exp.condition), env) {
         if is_truthy(condition) {
-            return eval(&NodeType::Statement(*if_exp.consequence), env)
+            return eval(&NodeType::Statement(*if_exp.consequence), env);
         } else if let Some(alt) = if_exp.alternative {
-            return eval(&NodeType::Statement(alt), env)
+            return eval(&NodeType::Statement(alt), env);
         }
     }
     None
@@ -166,8 +163,9 @@ fn eval_block(block: types::BlockStatement, env: &mut Environment) -> Option<Obj
     for stmt in block.statements {
         if let Some(res) = eval(&NodeType::Statement(stmt), env) {
             result = res;
-            if result.obj_type() == ObjectType::RETURN_VAL || result.obj_type() == ObjectType::ERROR {
-                return Some(result)
+            if result.obj_type() == ObjectType::RETURN_VAL ||
+               result.obj_type() == ObjectType::ERROR {
+                return Some(result);
             }
         }
     }
@@ -258,15 +256,13 @@ fn apply_function(func: Object, args: Vec<Object>) -> Option<Object> {
         Object::FUNCTION(fun) => {
             if let Some(mut ext_env) = extend_function_env(fun.clone(), &args) {
                 if let Some(evaluated) = eval(&NodeType::Statement(fun.body), &mut ext_env) {
-                    return unwrap_return_value(evaluated)
+                    return unwrap_return_value(evaluated);
                 }
             }
             None
-        },
-        Object::BUILTIN(ref blt_in) => {
-            unimplemented!()
-        },
-        _ => return Some(Object::ERROR(object::Error{message: "Invalid Type".to_owned()})),
+        }
+        Object::BUILTIN(ref blt_in) => unimplemented!(),
+        _ => return Some(Object::ERROR(object::Error { message: "Invalid Type".to_owned() })),
     }
 }
 
@@ -281,7 +277,7 @@ fn extend_function_env(func: object::Func, args: &[Object]) -> Option<Environmen
 
 fn unwrap_return_value(obj: Object) -> Option<Object> {
     if let Object::RETURN_VAL(rtn_val) = obj {
-        return Some(*rtn_val.value)
+        return Some(*rtn_val.value);
     }
     Some(obj)
 }
@@ -295,7 +291,7 @@ fn is_truthy(obj: Object) -> bool {
                 object::Boolean::False => false,
             }
         }
-        _ => true
+        _ => true,
     }
 }
 

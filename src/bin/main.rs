@@ -11,35 +11,33 @@ const ERROR: &'static str = "[Error]";
 
 fn main() {
     let matches = App::new("brain")
-        .arg(Arg::with_name("file")
-            .takes_value(true)
-            .index(1)
-        ).get_matches();
+        .arg(Arg::with_name("file").takes_value(true).index(1))
+        .get_matches();
 
     if matches.is_present("file") {
         let file_name = match matches.value_of("file") {
             Some(v) => v,
             None => {
                 println!("{} Source file needed.", ERROR);
-                return
-            },
+                return;
+            }
         };
 
         let mut file = match File::open(file_name) {
             Ok(f) => f,
             Err(_) => {
                 println!("{} Source file not found.", ERROR);
-                return
-            },
+                return;
+            }
         };
 
         let mut code = String::new();
         match file.read_to_string(&mut code) {
-            Ok(_) => { },
+            Ok(_) => {}
             Err(_) => {
                 println!("{} Source invalid.", ERROR);
-                return
-            },
+                return;
+            }
         }
         exec_file(&code);
     } else {
@@ -62,7 +60,7 @@ fn repl() {
                     Ok(v) => println!("{}", v),
                     Err(e) => println!("{}", e),
                 }
-            },
+            }
             Err(e) => println!("{}", e),
         };
         buff.clear();
