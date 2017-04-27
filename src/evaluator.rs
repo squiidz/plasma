@@ -1,7 +1,7 @@
 use ast::*;
+use environment::Environment;
 use types::{self, Program};
 use object::{self, Object, ObjectType, Objecter};
-use environment::*;
 
 pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object> {
     match *node {
@@ -10,6 +10,25 @@ pub fn eval<'a>(node: &'a NodeType, mut env: &mut Environment) -> Option<Object>
         NodeType::Statement(ref stmt) => eval_statement_type(stmt, env),
         _ => panic!("INVALID EXPRESSION"),
     }
+}
+
+fn eval_program(program: &Program, env: &mut Environment) -> Option<Object> {
+    let mut result: Option<Object> = None;
+
+    for stmt in &*program.statements {
+        result = eval(&NodeType::Statement(*stmt.clone()), env);
+        match result {
+            Some(ref r) => {
+                match *r {
+                    Object::RETURN_VAL(ref res) => return Some(*res.value.clone()),
+                    Object::ERROR(_) => return Some(r.clone()),
+                    _ => continue,
+                }
+            }
+            None => continue,
+        }
+    }
+    result
 }
 
 fn eval_expression_type(exp: &Expression, env: &mut Environment) -> Option<Object> {
@@ -91,25 +110,6 @@ fn eval_statement_type(stmt: &Statement, env: &mut Environment) -> Option<Object
             None
         }
     }
-}
-
-fn eval_program(program: &Program, env: &mut Environment) -> Option<Object> {
-    let mut result: Option<Object> = None;
-
-    for stmt in &*program.statements {
-        result = eval(&NodeType::Statement(*stmt.clone()), env);
-        match result {
-            Some(ref r) => {
-                match *r {
-                    Object::RETURN_VAL(ref res) => return Some(*res.value.clone()),
-                    Object::ERROR(_) => return Some(r.clone()),
-                    _ => continue,
-                }
-            }
-            None => continue,
-        }
-    }
-    result
 }
 
 fn eval_expression(exps: Vec<Expression>, env: &mut Environment) -> Option<Vec<Object>> {
