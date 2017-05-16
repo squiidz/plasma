@@ -194,6 +194,7 @@ fn eval_integer_infix(op: &str, left: Object, right: Object) -> Option<Object> {
         "-" => return Some(Object::INTEGER(object::Integer { value: left_value - right_value })),
         "*" => return Some(Object::INTEGER(object::Integer { value: left_value * right_value })),
         "/" => return Some(Object::INTEGER(object::Integer { value: left_value / right_value })),
+        "^" => return Some(Object::INTEGER(object::Integer { value: left_value.pow(right_value as u32) })),
         "<" => return native_boolean_object(left_value < right_value),
         ">" => return native_boolean_object(left_value > right_value),
         "==" => return native_boolean_object(left_value == right_value),

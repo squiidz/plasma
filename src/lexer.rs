@@ -40,6 +40,7 @@ impl Lexer {
             }
             '+' => tok = Token::new(TokenType::PLUS, '+'),
             '-' => tok = Token::new(TokenType::MINUS, '-'),
+            '^' => tok = Token::new(TokenType::POW, '^'),
             '!' => {
                 if self.peek_char() == '=' {
                     let ch = self.ch;

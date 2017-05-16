@@ -1,5 +1,5 @@
 var square = function(num) {
-    return num * 2;
+    return num ^ 2;
 };
 
 var callback = function(call, a, b) {

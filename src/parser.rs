@@ -30,6 +30,7 @@ lazy_static! {
         hm.insert(TokenType::MINUS, PrecedenceType::SUM);
         hm.insert(TokenType::SLASH, PrecedenceType::PRODUCT);
         hm.insert(TokenType::ASTERISK, PrecedenceType::PRODUCT);
+        hm.insert(TokenType::POW, PrecedenceType::PRODUCT);
         hm.insert(TokenType::LPAREN, PrecedenceType::CALL);
         hm
     };
@@ -86,6 +87,7 @@ impl Parser {
             TokenType::MINUS => self.parse_infix_expression(exp),
             TokenType::SLASH => self.parse_infix_expression(exp),
             TokenType::ASTERISK => self.parse_infix_expression(exp),
+            TokenType::POW => self.parse_infix_expression(exp),
             TokenType::EQ => self.parse_infix_expression(exp),
             TokenType::NOT_EQ => self.parse_infix_expression(exp),
             TokenType::LT => self.parse_infix_expression(exp),
