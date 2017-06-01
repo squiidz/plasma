@@ -56,6 +56,7 @@ fn repl() {
         let mut buff = String::new();
         match inp.read_line(&mut buff) {
             Ok(_) => {
+                if buff.trim() == "exit" { return }
                 match exec.execute(&buff) {
                     Ok(v) => println!("{}", v),
                     Err(e) => println!("{}", e),

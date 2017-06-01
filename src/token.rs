@@ -9,27 +9,27 @@ pub enum TokenType {
 
     IDENT,
     INT,
-    STRING,
-    ASSIGN,
-    PLUS,
-    MINUS,
-    BANG,
-    ASTERISK,
-    SLASH,
-    POW,
-    EQ,
-    NOT_EQ,
+    STRING,    // ""
+    ASSIGN,    // =
+    PLUS,      // +
+    MINUS,     // -
+    BANG,      // !
+    ASTERISK,  // *
+    SLASH,     // /
+    POW,       // ^
+    EQ,        // ==
+    NOT_EQ,    // !=
 
-    COMMA, // ,
+    COMMA,     // ,
     SEMICOLON, // ;
-    LBRACKET, // [
-    RBRACKET, // ]
-    LPAREN, // (
-    RPAREN, // )
-    LBRACE, // {
-    RBRACE, // }
-    LT,
-    GT,
+    LBRACKET,  // [
+    RBRACKET,  // ]
+    LPAREN,    // (
+    RPAREN,    // )
+    LBRACE,    // {
+    RBRACE,    // }
+    LT,        // <
+    GT,        // >
 
     FUNCTION,
     VAR,
