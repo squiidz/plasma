@@ -10,4 +10,5 @@ var mult = function(a, b) {
     return a * b;
 };
 
-square(callback(mult, 10, 5));
+var res = square(callback(mult, 10, 5));
+res;

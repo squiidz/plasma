@@ -10,7 +10,7 @@ use std::fs::File;
 const ERROR: &'static str = "[Error]";
 
 fn main() {
-    let matches = App::new("brain")
+    let matches = App::new("Plasma")
         .arg(Arg::with_name("file").takes_value(true).index(1))
         .get_matches();
 
@@ -22,24 +22,7 @@ fn main() {
                 return;
             }
         };
-
-        let mut file = match File::open(file_name) {
-            Ok(f) => f,
-            Err(_) => {
-                println!("{} Source file not found.", ERROR);
-                return;
-            }
-        };
-
-        let mut code = String::new();
-        match file.read_to_string(&mut code) {
-            Ok(_) => {}
-            Err(_) => {
-                println!("{} Source invalid.", ERROR);
-                return;
-            }
-        }
-        exec_file(&code);
+        exec_file(file_name);
     } else {
         repl();
     }
@@ -68,10 +51,27 @@ fn repl() {
     }
 }
 
-fn exec_file(code: &str) {
+fn exec_file(file_name: &str) {
     let mut exec = Executor::new();
 
-    match exec.execute(code) {
+    let mut file = match File::open(file_name) {
+        Ok(f) => f,
+        Err(_) => {
+            println!("{} Source file not found.", ERROR);
+            return;
+        }
+    };
+
+    let mut code = String::new();
+    match file.read_to_string(&mut code) {
+        Ok(_) => {}
+        Err(_) => {
+            println!("{} Source invalid.", ERROR);
+            return;
+        }
+    }
+
+    match exec.execute(&code) {
         Ok(v) => println!("{}", v),
         Err(e) => println!("{}", e),
     }
